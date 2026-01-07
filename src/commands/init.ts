@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { closeDatabase, getPlanDir, initDatabase } from "../db/client.js";
+import { closeDatabase, getPlanDir, initDatabase, clearProjectRootCache } from "../db/client.js";
 import type { PlanConfig } from "../models/task.js";
 import { savePlanConfig } from "../services/id.js";
 
@@ -115,6 +115,9 @@ export async function init(prefix: string = "np"): Promise<void> {
 	} catch (err) {
 		throw new Error(`Failed to create AGENTS.md: ${(err as Error).message}`);
 	}
+
+	// Clear the cache so subsequent commands can find the newly created .plan
+	clearProjectRootCache();
 
 	console.log(
 		`Created .plan/ directory with configuration (prefix: ${prefix}).`,

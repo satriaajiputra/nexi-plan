@@ -1,8 +1,10 @@
 import { mkdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { getPlanDir } from "../db/client.js";
 
 /**
  * Create plan directory if it doesn't exist
+ * Note: This should only be used by init command
  */
 export function ensurePlanDir(): string {
   const planDir = join(process.cwd(), ".plan");
@@ -103,9 +105,10 @@ export async function readStdin(): Promise<string> {
 
 /**
  * Write file to plan directory
+ * Uses the project root found by traversal
  */
 export function writePlanFile(filename: string, content: string): void {
-  const planDir = ensurePlanDir();
+  const planDir = getPlanDir();
   const filePath = join(planDir, filename);
 
   try {
@@ -117,9 +120,10 @@ export function writePlanFile(filename: string, content: string): void {
 
 /**
  * Read file from plan directory
+ * Uses the project root found by traversal
  */
 export function readPlanFile(filename: string): string | null {
-  const planDir = join(process.cwd(), ".plan");
+  const planDir = getPlanDir();
   const filePath = join(planDir, filename);
 
   try {
