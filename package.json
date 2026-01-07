@@ -1,0 +1,17 @@
+{
+  "name": ".nexiplan",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf ./bin && bun --bun build --compile --outfile=bin/np ./src/index.ts",
+    "check": "activate-minimax -p \"This is ask session, no need to edit. Please run \\`bun run typecheck\\` or \\`tsc --noEmit\\`, then let me know best way solution to fix the type errors without using Any as type.\" --allowedTools \"Read,Bash\"",
+    "typecheck": "bunx --bun tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
