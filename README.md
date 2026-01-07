@@ -1,15 +1,120 @@
-# .nexiplan
+# nexi-plan
 
-To install dependencies:
+A CLI task tracker for your projects. Track work items, bugs, and epics with hierarchical relationships and convergence tracking.
+
+## What is this?
+
+`np` is a command-line tool you run in your project directory to track tasks. Each task gets a short ID (e.g., `np-abc123`) that you can reference in commits, PRs, or Claude Code conversations.
+
+## Install
 
 ```bash
+# Clone and build
+git clone https://github.com/satriaajiputra/nexi-plan.git
+cd nexi-plan
 bun install
+bun run build
+
+# Add to PATH (or symlink)
+ln -s $(pwd)/bin/np ~/bin/np  # or anywhere in your PATH
 ```
 
-To run:
+## Initialize in your project
 
 ```bash
-bun run index.ts
+cd /path/to/your/project
+np init myproject
+# Creates .plan/ directory with SQLite database
 ```
 
-This project was created using `bun init` in bun v1.3.5. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+## Quick Start
+
+```bash
+# Add a task
+np add -n "Implement login API"
+np add -n "fix: CSS alignment bug"  # Auto-detects type=bug
+np add -n "urgent: database outage" # Auto-detects priority=1
+
+# See what to work on
+np next
+
+# Start working
+np work np-abc123  # Shows task details, marks as in_progress
+
+# Mark done
+np done np-abc123
+
+# List all
+np ls
+np ls --wip        # Work in progress only
+np ls --focus      # High priority, unblocked
+
+# Search
+np find login
+np go api          # Find + immediately work on it
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `np init [prefix]` | Create `.plan/` database in current directory |
+| `np add -n "name"` | Add task with smart defaults |
+| `np ls` | List all tasks in tree view |
+| `np ls --wip` | Show only in-progress tasks |
+| `np view <id>` | Show full task details |
+| `np update <id> --status pending\|in_progress\|completed\|blocked\|cancelled` | Update status |
+| `np update <id> --convergence 0.5` | Update progress (0=done, 1=not started) |
+| `np del <id>` | Delete task (cascades to children) |
+| `np start <id>` | Mark as in_progress |
+| `np done <id>` | Mark as completed |
+| `np block <id>` | Mark as blocked |
+| `np work <id>` | View details + mark in_progress |
+| `np next` | Suggest next task to work on |
+| `np find <query>` | Fuzzy search tasks |
+| `np go <query>` | Find + work on task |
+
+## Smart Prefixes
+
+Task name prefixes auto-detect properties:
+
+| Prefix | Effect |
+|--------|--------|
+| `fix:` | type = bug |
+| `feat:` | type = task |
+| `epic:` | type = epic |
+| `urgent:` / `critical:` | priority = 1 |
+| `important:` | priority = 2 |
+
+## Task Properties
+
+**Types:**
+- `epic` - Large feature/initiative (weight: 1.0)
+- `task` - Regular work item (weight: 2.0)
+- `bug` - Bug fix (weight: 3.0)
+
+**Priority:** 1 (highest) to 5 (lowest), default: 3
+
+**Status:** `pending`, `in_progress`, `completed`, `blocked`, `cancelled`
+
+## Convergence
+
+Parent task convergence is a weighted average of children's convergence:
+
+```
+Parent Convergence = Σ(Child Convergence × Child Weight) / Σ(Child Weights)
+```
+
+- 0.0 = Completed
+- 0.5 = Halfway done
+- 1.0 = Not started
+
+Excludes cancelled tasks from calculation.
+
+## Claude Code Integration
+
+Run `np init` in your project and an `AGENTS.md` file will be created with instructions for AI assistants on how to use the task tracker.
+
+---
+
+Built with [Bun](https://bun.com)
