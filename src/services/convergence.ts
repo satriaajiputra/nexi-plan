@@ -39,11 +39,17 @@ export function propagateConvergence(db: Database, taskId: number): void {
     return;
   }
 
+  // Get parent task to access its hash_id
+  const parentTask = getTaskByInternalId(db, task.parent_id);
+  if (!parentTask) {
+    return;
+  }
+
   // Calculate new convergence for parent
   const newConvergence = calculateParentConvergence(db, task.parent_id);
 
-  // Update parent's convergence
-  updateTask(db, task.parent_id.toString(), { convergence: newConvergence });
+  // Update parent's convergence using hash_id
+  updateTask(db, parentTask.hash_id, { convergence: newConvergence });
 
   // Recursively propagate up
   propagateConvergence(db, task.parent_id);
