@@ -8,6 +8,33 @@ A CLI task tracker for your projects. Track work items, bugs, and epics with hie
 
 ## Install
 
+### Option 1: Download Pre-built Binary (Recommended)
+
+Grab the latest release for your platform from the [releases page](https://github.com/satriaajiputra/nexi-plan/releases).
+
+```bash
+# Linux (AMD64)
+curl -L https://github.com/satriaajiputra/nexi-plan/releases/latest/download/np-linux-amd64 -o np
+chmod +x np
+sudo mv np /usr/local/bin/  # or ~/bin/ if it's in your PATH
+
+# macOS (Apple Silicon)
+curl -L https://github.com/satriaajiputra/nexi-plan/releases/latest/download/np-macos-arm64 -o np
+chmod +x np
+sudo mv np /usr/local/bin/
+
+# macOS (Intel)
+curl -L https://github.com/satriaajiputra/nexi-plan/releases/latest/download/np-macos-amd64 -o np
+chmod +x np
+sudo mv np /usr/local/bin/
+
+# Windows (PowerShell)
+# Download np-windows-amd64.exe from releases, then:
+# Add to PATH or move to a directory in PATH
+```
+
+### Option 2: Build from Source
+
 ```bash
 # Clone and build
 git clone https://github.com/satriaajiputra/nexi-plan.git
