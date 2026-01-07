@@ -23,7 +23,9 @@ export async function view(hashId: string): Promise<void> {
       console.log("\nSub-tasks:");
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
-        console.log(`  ${i + 1}. ${child.hash_id}: ${child.name} (${child.status})`);
+        if (child) {
+          console.log(`  ${i + 1}. ${child.hash_id}: ${child.name} (${child.status})`);
+        }
       }
     }
   } finally {

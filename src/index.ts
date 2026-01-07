@@ -13,6 +13,7 @@ import { work } from "./commands/work.js";
 import { next as nextCmd } from "./commands/next.js";
 import { find } from "./commands/find.js";
 import { go } from "./commands/go.js";
+import { selfUpdate } from "./commands/selfUpdate.js";
 import { validateTaskType, validatePriority, validateStatus, validateConvergence } from "./utils/detect.js";
 import { error, info } from "./utils/format.js";
 import { TaskType, TaskStatus, type TaskPriority } from "./models/task.js";
@@ -92,9 +93,10 @@ async function main() {
 
     case "update": {
       const id = getArg(args, 0);
+      // If no ID provided, run self-update
       if (!id) {
-        error("Missing task ID");
-        return;
+        await selfUpdate();
+        break;
       }
 
       let status: TaskStatus | undefined;
@@ -231,7 +233,7 @@ COMMANDS:
 
   np view <id>                  View full task details
 
-  np update <id> [options]      Update task
+  np update [id] [options]        Update task (or CLI if no id)
     --status <status>           New status: pending, in_progress, completed, blocked, cancelled
     --convergence <0-1>         Convergence value (0=done, 1=not started)
     -d, --description <text>    Update description (@file for file input)

@@ -34,7 +34,7 @@ export function formatConvergence(convergence: number): string {
  */
 export function parseTaskId(taskId: string): string {
   const match = taskId.match(/^([a-zA-Z0-9-]+)\.?\d*$/);
-  return match ? match[1] : taskId;
+  return match?.[1] ?? taskId;
 }
 
 /**
