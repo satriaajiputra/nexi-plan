@@ -3,6 +3,7 @@ import { $ } from "bun";
 
 const REPO = "satriaajiputra/nexi-plan";
 const API_BASE = "https://api.github.com";
+const CURRENT_VERSION = "1.0.0";
 
 interface GitHubRelease {
   tag_name: string;
@@ -193,7 +194,36 @@ export async function selfUpdate(): Promise<void> {
     return;
   }
 
+  const latestVersion = release.tag_name.replace(/^v/, "");
+  info(`Current version: v${CURRENT_VERSION}`);
   info(`Latest version: ${release.tag_name}`);
+
+  // Compare versions
+  if (latestVersion === CURRENT_VERSION) {
+    success("You're already on the latest version!");
+    return;
+  }
+
+  // Check if update is needed (simple semver comparison)
+  const currentParts = CURRENT_VERSION.split(".").map(Number);
+  const latestParts = latestVersion.split(".").map(Number);
+  let needsUpdate = false;
+
+  for (let i = 0; i < 3; i++) {
+    const c = currentParts[i] ?? 0;
+    const l = latestParts[i] ?? 0;
+    if (l > c) {
+      needsUpdate = true;
+      break;
+    } else if (l < c) {
+      break;
+    }
+  }
+
+  if (!needsUpdate) {
+    success("You're already on the latest version!");
+    return;
+  }
 
   // Find the appropriate binary
   const binaryAsset = release.assets.find((a) => a.name === platform.binaryName);

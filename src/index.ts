@@ -18,9 +18,18 @@ import { validateTaskType, validatePriority, validateStatus, validateConvergence
 import { error, info } from "./utils/format.js";
 import { TaskType, TaskStatus, type TaskPriority } from "./models/task.js";
 
+// Read version from package.json
+const VERSION = "1.0.0";
+
 async function main() {
   const { command, args, flags } = parseArgs(process.argv);
   const normalized = normalizeFlags(flags);
+
+  // Show version
+  if (command === "version" || command === "--version" || command === "-v" || hasFlag(normalized, "version")) {
+    console.log(`np v${VERSION}`);
+    return;
+  }
 
   // Show help
   if (command === "help" || hasFlag(normalized, "help")) {
@@ -211,12 +220,13 @@ async function main() {
 
 function showHelp() {
   console.log(`
-np - CLI Task Tracking Tool
+np - CLI Task Tracking Tool v${VERSION}
 
 USAGE:
   np <command> [options]
 
 COMMANDS:
+  np version, --version, -v     Show version information
   np init [prefix]              Initialize project (default prefix: np)
 
   np add -n "Task" [options]    Add a new task
