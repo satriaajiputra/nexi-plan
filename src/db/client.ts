@@ -32,17 +32,13 @@ function isAtHomeBoundary(currentDir: string): boolean {
 
 /**
  * Find the project root by traversing up the directory tree
+ * Does NOT use or update cache - pure traversal
  * Stops at:
  * - .plan directory found (success)
  * - Home directory boundary (safety limit)
  * - Filesystem root (ultimate limit)
  */
-export function findProjectRoot(startDir: string = process.cwd()): string | null {
-	// Check cache first
-	if (cachedProjectRoot) {
-		return cachedProjectRoot;
-	}
-
+function findProjectRootNoCache(startDir: string): string | null {
 	let currentDir = resolve(startDir);
 	const root = resolve("/");
 
@@ -54,7 +50,6 @@ export function findProjectRoot(startDir: string = process.cwd()): string | null
 			// Verify it's actually a directory
 			try {
 				readdirSync(planPath);
-				cachedProjectRoot = currentDir;
 				return currentDir;
 			} catch {
 				// Not accessible, continue searching
@@ -74,6 +69,22 @@ export function findProjectRoot(startDir: string = process.cwd()): string | null
 }
 
 /**
+ * Find the project root (uses cache for performance)
+ */
+export function findProjectRoot(startDir: string = process.cwd()): string | null {
+	// Check cache first
+	if (cachedProjectRoot) {
+		return cachedProjectRoot;
+	}
+
+	const root = findProjectRootNoCache(startDir);
+	if (root) {
+		cachedProjectRoot = root;
+	}
+	return root;
+}
+
+/**
  * Clear the cached project root (useful for testing or after init)
  */
 export function clearProjectRootCache(): void {
@@ -83,8 +94,8 @@ export function clearProjectRootCache(): void {
 /**
  * Get the project root directory (throws if not found)
  */
-export function getProjectRoot(): string {
-	const root = findProjectRoot();
+export function getProjectRoot(cwd: string = process.cwd()): string {
+	const root = findProjectRoot(cwd);
 	if (!root) {
 		throw new Error(
 			`No .plan directory found in current directory or any parent directory. Run 'np init' first.`,
@@ -96,27 +107,28 @@ export function getProjectRoot(): string {
 /**
  * Get the database path
  */
-export function getDbPath(): string {
-	try {
-		const root = getProjectRoot();
-		return join(root, PLAN_DIR, DB_NAME);
-	} catch {
-		// Fallback to current directory for init command
-		return join(process.cwd(), PLAN_DIR, DB_NAME);
-	}
+export function getDbPath(cwd: string = process.cwd()): string {
+	const planDir = getPlanDir(cwd);
+	return join(planDir, DB_NAME);
 }
 
 /**
  * Get the plan directory path
+ * First checks if .plan exists directly in cwd, then falls back to finding parent .plan
  */
-export function getPlanDir(): string {
-	try {
-		const root = getProjectRoot();
-		return join(root, PLAN_DIR);
-	} catch {
-		// Fallback to current directory for init command
-		return join(process.cwd(), PLAN_DIR);
+export function getPlanDir(cwd: string = process.cwd()): string {
+	// Check if plan dir exists directly in cwd
+	const directPlanDir = join(cwd, PLAN_DIR);
+	if (existsSync(directPlanDir)) {
+		return directPlanDir;
 	}
+	// Try to find parent .plan directory
+	const root = findProjectRootNoCache(cwd);
+	if (root) {
+		return join(root, PLAN_DIR);
+	}
+	// For init: return direct path to create in provided cwd
+	return directPlanDir;
 }
 
 /**

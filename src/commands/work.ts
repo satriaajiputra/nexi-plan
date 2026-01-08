@@ -1,12 +1,13 @@
 import Database from "bun:sqlite";
-import { getDatabase, closeDatabase } from "../db/client.js";
+import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { getTaskById, updateTask as dbUpdateTask } from "../db/queries.js";
 import { propagateConvergence } from "../services/convergence.js";
 import { formatTaskDetails, info, parseTaskId } from "../utils/format.js";
 import { TaskStatus } from "../models/task.js";
 
-export async function work(hashId: string): Promise<void> {
-  const db = getDatabase();
+export async function work(hashId: string, cwd?: string): Promise<void> {
+  const dbPath = cwd ? getDbPath(cwd) : undefined;
+  const db = getDatabase(dbPath);
 
   try {
     const actualId = parseTaskId(hashId);

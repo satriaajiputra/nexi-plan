@@ -1,5 +1,16 @@
 import { type TaskPriority, TaskType } from "../models/task.js";
 
+const priorityPrefixes = [
+	"urgent:",
+	"critical:",
+	"hotfix:",
+	"important:",
+	"high:",
+	"low:",
+	"optional:",
+	"nice to have:",
+];
+
 /**
  * Detect task type from name prefix
  * Patterns:
@@ -62,34 +73,24 @@ export function detectPriority(name: string): TaskPriority | null {
 /**
  * Clean task name by removing detected prefixes
  * Removes detection prefixes like "fix:", "urgent:", etc.
+ * Handles multiple prefixes in sequence.
  */
 export function cleanTaskName(name: string): string {
 	let cleaned = name.trim();
 
-	// Remove type prefixes
 	const typePrefixes = ["fix:", "bug:", "feat:", "feature:", "epic:"];
-	for (const prefix of typePrefixes) {
-		if (cleaned.toLowerCase().startsWith(prefix)) {
-			cleaned = cleaned.slice(prefix.length).trim();
-			break;
-		}
-	}
 
-	// Remove priority prefixes
-	const priorityPrefixes = [
-		"urgent:",
-		"critical:",
-		"hotfix:",
-		"important:",
-		"high:",
-		"low:",
-		"optional:",
-		"nice to have:",
-	];
-	for (const prefix of priorityPrefixes) {
-		if (cleaned.toLowerCase().startsWith(prefix)) {
-			cleaned = cleaned.slice(prefix.length).trim();
-			break;
+	const allPrefixes = [...priorityPrefixes, ...typePrefixes];
+
+	// Keep removing prefixes until none match
+	let changed = true;
+	while (changed) {
+		changed = false;
+		for (const prefix of allPrefixes) {
+			if (cleaned.toLowerCase().startsWith(prefix)) {
+				cleaned = cleaned.slice(prefix.length).trim();
+				changed = true;
+			}
 		}
 	}
 
@@ -112,10 +113,25 @@ export interface DetectionResult {
 
 /**
  * Detect both type and priority from task name
+ * Handles multiple prefixes by stripping priority prefixes before detecting type
  */
 export function detectFromName(name: string): DetectionResult {
-	const type = detectTaskType(name);
+	// First, strip priority prefixes to get the remaining part for type detection
+	let nameForTypeDetection = name;
+
+	for (const prefix of priorityPrefixes) {
+		if (nameForTypeDetection.toLowerCase().startsWith(prefix)) {
+			nameForTypeDetection = nameForTypeDetection.slice(prefix.length).trim();
+		}
+	}
+
+	// Detect type from the remaining name (after stripping priority prefixes)
+	const type = detectTaskType(nameForTypeDetection);
+
+	// Detect priority from original name
 	const priority = detectPriority(name);
+
+	// Clean the name - remove all type and priority prefixes
 	const cleanName = cleanTaskName(name);
 
 	return {

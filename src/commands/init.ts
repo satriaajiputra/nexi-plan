@@ -1,13 +1,13 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { closeDatabase, getPlanDir, initDatabase, clearProjectRootCache } from "../db/client.js";
+import { closeDatabase, initDatabase, clearProjectRootCache } from "../db/client.js";
 import type { PlanConfig } from "../models/task.js";
 import { savePlanConfig } from "../services/id.js";
 import { AGENTS_TEMPLATE } from "../templates/agents.js";
 
-export async function init(prefix: string = "np"): Promise<void> {
-	// Get plan directory path
-	const planDir = getPlanDir();
+export async function init(prefix: string = "np", cwd: string = process.cwd()): Promise<void> {
+	// Construct plan directory path directly - don't search parent for init
+	const planDir = join(cwd, ".plan");
 
 	// Create .plan directory if it doesn't exist
 	if (!existsSync(planDir)) {
@@ -16,7 +16,8 @@ export async function init(prefix: string = "np"): Promise<void> {
 
 	// Initialize database
 	try {
-		const db = initDatabase();
+		const dbPath = join(planDir, "tasks.db");
+		const db = initDatabase(dbPath);
 		closeDatabase(db);
 	} catch (err) {
 		throw new Error(`Failed to initialize database: ${(err as Error).message}`);
@@ -27,7 +28,7 @@ export async function init(prefix: string = "np"): Promise<void> {
 		prefix,
 		version: "1.0.0",
 	};
-	savePlanConfig(config);
+	savePlanConfig(config, planDir);
 
 	// Write AGENTS.md template
 	const agentsPath = join(planDir, "../", "AGENTS.md");

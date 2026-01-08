@@ -108,7 +108,7 @@ export function getFlag(
   defaultValue?: string
 ): string | undefined {
   const value = flags[name];
-  if (value === undefined || value === true) {
+  if (value === undefined || value === true || value === "") {
     return defaultValue;
   }
   if (typeof value === "string") {

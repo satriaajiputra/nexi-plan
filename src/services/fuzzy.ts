@@ -87,6 +87,11 @@ export function fuzzySearchTasks(
   tasks: Task[],
   query: string
 ): FuzzyMatch[] {
+  // Handle empty query - return no results
+  if (!query || query.trim().length === 0) {
+    return [];
+  }
+
   const results: FuzzyMatch[] = [];
 
   for (const task of tasks) {

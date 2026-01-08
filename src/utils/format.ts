@@ -163,6 +163,9 @@ export function buildTaskTree(tasks: Task[]): TaskNode[] {
       if (parent) {
         parent.children.push(node);
         node.depth = parent.depth + 1;
+      } else {
+        // Parent doesn't exist (orphan task) - treat as root
+        roots.push(node);
       }
     }
   }

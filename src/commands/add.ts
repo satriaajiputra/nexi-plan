@@ -1,5 +1,5 @@
 import Database from "bun:sqlite";
-import { getDatabase, closeDatabase } from "../db/client.js";
+import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { insertTask, getTaskById, getChildTasks } from "../db/queries.js";
 import { generateTaskId } from "../services/id.js";
 import { propagateConvergence, autoCompleteIfConverged } from "../services/convergence.js";
@@ -15,10 +15,12 @@ export interface AddOptions {
   description?: string;
   deps?: string;
   stdin?: string;
+  cwd?: string;
 }
 
 export async function add(options: AddOptions): Promise<void> {
-  const db = getDatabase();
+  const dbPath = options.cwd ? getDbPath(options.cwd) : undefined;
+  const db = getDatabase(dbPath);
 
   try {
     // Smart detection from name
@@ -52,7 +54,7 @@ export async function add(options: AddOptions): Promise<void> {
     }
 
     // Generate task ID
-    const hashId = generateTaskId();
+    const hashId = generateTaskId(options.cwd);
 
     // Insert task
     const task = insertTask(db, {

@@ -8,9 +8,9 @@ const CONFIG_FILE = ".plan/config.json";
 /**
  * Get the current plan configuration
  */
-export function getPlanConfig(): PlanConfig | null {
+export function getPlanConfig(cwd?: string): PlanConfig | null {
   try {
-    const path = join(process.cwd(), CONFIG_FILE);
+    const path = join(cwd ?? process.cwd(), CONFIG_FILE);
     const content = readFileSync(path, "utf-8");
     return JSON.parse(content) as PlanConfig;
   } catch {
@@ -21,8 +21,9 @@ export function getPlanConfig(): PlanConfig | null {
 /**
  * Save the plan configuration
  */
-export function savePlanConfig(config: PlanConfig): void {
-  const path = join(process.cwd(), CONFIG_FILE);
+export function savePlanConfig(config: PlanConfig, planDir?: string): void {
+  const cwd = planDir ? join(planDir, "..") : process.cwd();
+  const path = join(cwd, CONFIG_FILE);
   writeFileSync(path, JSON.stringify(config, null, 2));
 }
 
@@ -38,8 +39,8 @@ export function generateHash(data: string): string {
 /**
  * Generate a unique task ID with prefix
  */
-export function generateTaskId(): string {
-  const config = getPlanConfig();
+export function generateTaskId(cwd?: string): string {
+  const config = getPlanConfig(cwd);
   const prefix = config?.prefix ?? "np";
 
   // Combine timestamp with random bytes for uniqueness
@@ -54,8 +55,8 @@ export function generateTaskId(): string {
 /**
  * Validate a task ID format (prefix-hash)
  */
-export function validateTaskId(id: string): boolean {
-  const config = getPlanConfig();
+export function validateTaskId(id: string, cwd?: string): boolean {
+  const config = getPlanConfig(cwd);
   const prefix = config?.prefix ?? "np";
   const pattern = new RegExp(`^${prefix}-[a-f0-9]{6}$`);
   return pattern.test(id);

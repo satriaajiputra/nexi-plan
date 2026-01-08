@@ -1,12 +1,13 @@
 import Database from "bun:sqlite";
-import { getDatabase, closeDatabase } from "../db/client.js";
+import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { getTaskById, getAllTasks } from "../db/queries.js";
 import { findBestMatch, matchesTaskId } from "../services/fuzzy.js";
 import { work } from "./work.js";
 import { info, parseTaskId } from "../utils/format.js";
 
-export async function go(query: string): Promise<void> {
-  const db = getDatabase();
+export async function go(query: string, cwd?: string): Promise<void> {
+  const dbPath = cwd ? getDbPath(cwd) : undefined;
+  const db = getDatabase(dbPath);
 
   try {
     // First, try to find by exact task ID (handle suffix like ".1")
@@ -34,7 +35,7 @@ export async function go(query: string): Promise<void> {
     closeDatabase(db);
 
     // Work on the found task
-    await work(targetTask.hash_id);
+    await work(targetTask.hash_id, cwd);
   } catch (err) {
     info(`Error: ${(err as Error).message}`);
   }

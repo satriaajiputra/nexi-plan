@@ -30,17 +30,20 @@ export interface DescriptionInput {
 }
 
 export function readDescription(input: string, stdinContent?: string): string {
-  if (input.startsWith("@")) {
-    // Read from file
-    const filePath = input.slice(1);
-    const fullPath = join(process.cwd(), filePath);
+	if (input.startsWith("@")) {
+		// Read from file
+		const filePath = input.slice(1);
+		// Use absolute path directly, or resolve relative to cwd
+		const fullPath = require("node:path").isAbsolute(filePath)
+			? filePath
+			: join(process.cwd(), filePath);
 
-    try {
-      return readFileSync(fullPath, "utf-8");
-    } catch (err) {
-      throw new Error(`Failed to read file: ${filePath}`);
-    }
-  }
+		try {
+			return readFileSync(fullPath, "utf-8");
+		} catch (err) {
+			throw new Error(`Failed to read file: ${filePath}`);
+		}
+	}
 
   if (input === "-") {
     // Read from stdin

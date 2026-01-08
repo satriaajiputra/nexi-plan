@@ -1,5 +1,5 @@
 import Database from "bun:sqlite";
-import { getDatabase, closeDatabase } from "../db/client.js";
+import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { getTaskById, updateTask as dbUpdateTask } from "../db/queries.js";
 import { propagateConvergence } from "../services/convergence.js";
 import { snapToZero } from "../utils/convergence.js";
@@ -12,10 +12,12 @@ export interface UpdateOptions {
   convergence?: number;
   description?: string;
   stdin?: string;
+  cwd?: string;
 }
 
 export async function updateTask(hashId: string, options: UpdateOptions): Promise<void> {
-  const db = getDatabase();
+  const dbPath = options.cwd ? getDbPath(options.cwd) : undefined;
+  const db = getDatabase(dbPath);
 
   try {
     const actualId = parseTaskId(hashId);

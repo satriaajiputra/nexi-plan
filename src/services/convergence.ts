@@ -110,7 +110,7 @@ export function recalculateTreeConvergence(db: Database, taskId: number): void {
 
   // Calculate convergence from children
   const newConvergence = calculateParentConvergence(db, taskId);
-  updateTask(db, taskId.toString(), { convergence: newConvergence });
+  updateTask(db, task.hash_id, { convergence: newConvergence });
 
   // Propagate up to parent
   if (task.parent_id) {

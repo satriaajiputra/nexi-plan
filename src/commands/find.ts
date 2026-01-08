@@ -1,11 +1,12 @@
 import Database from "bun:sqlite";
-import { getDatabase, closeDatabase } from "../db/client.js";
+import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { getAllTasks } from "../db/queries.js";
 import { fuzzySearchTasks } from "../services/fuzzy.js";
 import { formatTask, info } from "../utils/format.js";
 
-export async function find(query: string): Promise<void> {
-  const db = getDatabase();
+export async function find(query: string, cwd?: string): Promise<void> {
+  const dbPath = cwd ? getDbPath(cwd) : undefined;
+  const db = getDatabase(dbPath);
 
   try {
     const tasks = getAllTasks(db);

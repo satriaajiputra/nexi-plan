@@ -1,11 +1,12 @@
 import Database from "bun:sqlite";
-import { getDatabase, closeDatabase } from "../db/client.js";
+import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { getTasksByFilter } from "../db/queries.js";
 import { formatTask, info } from "../utils/format.js";
 import { TaskStatus } from "../models/task.js";
 
-export async function next(): Promise<void> {
-  const db = getDatabase();
+export async function next(cwd?: string): Promise<void> {
+  const dbPath = cwd ? getDbPath(cwd) : undefined;
+  const db = getDatabase(dbPath);
 
   try {
     // Get high priority tasks that are not blocked, cancelled, or completed
@@ -34,6 +35,11 @@ export async function next(): Promise<void> {
 
     // Show the top candidate
     const topTask = candidates.sort((a, b) => {
+      // Prefer in_progress over pending for same priority
+      if (a.priority === b.priority) {
+        if (a.status === TaskStatus.IN_PROGRESS && b.status !== TaskStatus.IN_PROGRESS) return -1;
+        if (b.status === TaskStatus.IN_PROGRESS && a.status !== TaskStatus.IN_PROGRESS) return 1;
+      }
       if (a.priority !== b.priority) return a.priority - b.priority;
       return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     })[0];

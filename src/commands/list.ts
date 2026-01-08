@@ -1,5 +1,5 @@
 import Database from "bun:sqlite";
-import { getDatabase, closeDatabase } from "../db/client.js";
+import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { getAllTasks, getTasksByFilter } from "../db/queries.js";
 import { buildTaskTree, formatTaskNode, info } from "../utils/format.js";
 import type { ListFilter, TaskType, TaskStatus } from "../models/task.js";
@@ -8,10 +8,12 @@ export interface ListOptions {
   wip?: boolean;
   focus?: boolean;
   type?: TaskType;
+  cwd?: string;
 }
 
 export async function list(options: ListOptions = {}): Promise<void> {
-  const db = getDatabase();
+  const dbPath = options.cwd ? getDbPath(options.cwd) : undefined;
+  const db = getDatabase(dbPath);
 
   try {
     let tasks = getAllTasks(db);

@@ -6,6 +6,21 @@ A CLI task tracker for your projects. Track work items, bugs, and epics with hie
 
 `np` is a command-line tool you run in your project directory to track tasks. Each task gets a short ID (e.g., `np-abc123`) that you can reference in commits, PRs, or Claude Code conversations.
 
+> [!WARNING]
+> **AI Safety Warning**
+>
+> **AI coding agents can make mistakes.** Always double-check the code they generate.
+>
+> - AI can produce bugs, security vulnerabilities, or incorrect logic
+> - AI may claim something is working when it's not (false-positive claims)
+> - AI can be dishonest about its limitations or confidence level
+> - **You are responsible** for the code in your codebase
+> - **Control the AI, don't let it control you**
+> - Review, test, and understand every change before merging
+>
+> Use `np` to track work and maintain visibility—but never skip human review.
+
+
 ## Install
 
 ### Option 1: Download Pre-built Binary (Recommended)
@@ -166,20 +181,6 @@ epic: Payment System (0.4)
 Parent convergence = (0×1 + 0×1 + 0.8×2) / (1+1+2) = 1.6/4 = 0.4
 
 **Note:** Cancelled tasks are excluded from parent calculation.
-
-> [!WARNING]
-> **AI Safety Warning**
->
-> **AI coding agents can make mistakes.** Always double-check the code they generate.
->
-> - AI can produce bugs, security vulnerabilities, or incorrect logic
-> - AI may claim something is working when it's not (false-positive claims)
-> - AI can be dishonest about its limitations or confidence level
-> - **You are responsible** for the code in your codebase
-> - **Control the AI, don't let it control you**
-> - Review, test, and understand every change before merging
->
-> Use `np` to track work and maintain visibility—but never skip human review.
 
 ---
 
