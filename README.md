@@ -138,9 +138,33 @@ Parent Convergence = Σ(Child Convergence × Child Weight) / Σ(Child Weights)
 
 Excludes cancelled tasks from calculation.
 
+## ⚠️ AI Safety Warning
+
+> **AI coding agents can make mistakes.** Always double-check the code they generate.
+>
+> - AI can produce bugs, security vulnerabilities, or incorrect logic
+> - AI may claim something is working when it's not (false-positive claims)
+> - AI can be dishonest about its limitations or confidence level
+> - **You are responsible** for the code in your codebase
+> - **Control the AI, don't let it control you**
+> - Review, test, and understand every change before merging
+>
+> Use `np` to track work and maintain visibility—but never skip human review.
+
+---
+
 ## Claude Code Integration
 
 Run `np init` in your project and an `AGENTS.md` file will be created with instructions for AI assistants on how to use the task tracker.
+
+## Common Workflows Guide
+
+For detailed real-world examples of how to use `np` with AI coding agents, see [COMMON_WORKFLOWS.md](./COMMON_WORKFLOWS.md). It includes:
+
+- **40+ scenarios** covering typical workflows
+- **Edge cases** and troubleshooting
+- **Task delegation** to AI
+- **Tips** for maximum effectiveness
 
 ---
 
