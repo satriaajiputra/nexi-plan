@@ -199,8 +199,10 @@ np update mp-abc123 --convergence 0.2  # Almost finished
 
 **AI completes:**
 ```bash
-np done mp-abc123  # Sets convergence=0 automatically
+np update mp-abc123 --convergence 0.005  # Within 1% threshold → auto-completes
 ```
+
+**Auto-complete:** When convergence reaches <= 0.01, the task is automatically marked as completed.
 
 **You check:**
 ```bash
@@ -351,7 +353,9 @@ np ls --focus
 | 0.7 | Just started |
 | 0.5 | Halfway |
 | 0.3 | Almost done |
-| 0.0 | Completed |
+| <= 0.01 | Completed (auto-complete triggered) |
+
+**Note:** Values within 0.01 (1%) of 0 are snapped to 0 and the task is automatically marked as completed.
 
 ---
 
@@ -792,7 +796,7 @@ np add -n "Frontend integration" --deps mp-api2
 
 **AI works sequentially:**
 1. Work on Database migration
-2. `np done` when complete
+2. `np update <id> --convergence 0.005` to complete
 3. Work on API endpoints
 4. etc.
 
@@ -870,21 +874,21 @@ np block mp-xyz789 -d "Blocked by: mp-abc123 (User dashboard)"
 
 ---
 
-### Scenario 35: "I'm Done But Convergence Isn't 0"
+### Scenario 35: "I'm Done But Status Isn't Completed"
 
-Task is complete but AI forgot to run `np done`.
+Task is complete but status wasn't updated.
 
 **You notice:**
 ```bash
 np ls
-→ mp-abc123: feat: Export CSV (in_progress) 0.0
+→ mp-abc123: feat: Export CSV (in_progress) 0.0 *
 ```
 
-**Convergence is 0 but status is still `in_progress`.**
+**Note the `*` indicator - convergence is within threshold.**
 
 **AI fixes:**
 ```bash
-np done mp-abc123  # Sets both convergence=0 AND status=completed
+np done mp-abc123  # Just updates status to completed
 ```
 
 ---

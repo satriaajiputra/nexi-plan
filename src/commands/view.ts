@@ -1,7 +1,7 @@
 import Database from "bun:sqlite";
 import { getDatabase, closeDatabase } from "../db/client.js";
 import { getTaskById, getChildTasks } from "../db/queries.js";
-import { formatTaskDetails, info, parseTaskId } from "../utils/format.js";
+import { formatTaskDetails, info, parseTaskId, isConvergenceConverged } from "../utils/format.js";
 
 export async function view(hashId: string): Promise<void> {
   const db = getDatabase();

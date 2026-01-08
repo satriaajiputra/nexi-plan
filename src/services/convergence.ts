@@ -1,6 +1,7 @@
 import Database from "bun:sqlite";
 import { CONVERGENCE_WEIGHTS, type Task, TaskStatus, type TaskType } from "../models/task.js";
 import { getChildTasks, getTaskByInternalId, updateTask } from "../db/queries.js";
+import { snapToZero, isConverged } from "../utils/convergence.js";
 
 /**
  * Calculate the convergence of a parent task based on its children
@@ -26,7 +27,8 @@ export function calculateParentConvergence(db: Database, parentId: number): numb
     totalWeight += weight;
   }
 
-  return totalWeight > 0 ? weightedSum / totalWeight : 0;
+  const result = totalWeight > 0 ? weightedSum / totalWeight : 0;
+  return snapToZero(result);
 }
 
 /**
@@ -36,6 +38,8 @@ export function calculateParentConvergence(db: Database, parentId: number): numb
 export function propagateConvergence(db: Database, taskId: number): void {
   const task = getTaskByInternalId(db, taskId);
   if (!task || !task.parent_id) {
+    // Also check auto-complete for the leaf task itself
+    autoCompleteIfConverged(db, taskId);
     return;
   }
 
@@ -51,6 +55,9 @@ export function propagateConvergence(db: Database, taskId: number): void {
   // Update parent's convergence using hash_id
   updateTask(db, parentTask.hash_id, { convergence: newConvergence });
 
+  // Check auto-complete for parent after convergence update
+  autoCompleteIfConverged(db, parentTask.id);
+
   // Recursively propagate up
   propagateConvergence(db, task.parent_id);
 }
@@ -62,6 +69,25 @@ export function updateTaskConvergence(db: Database, hashId: string, convergence:
   const task = updateTask(db, hashId, { convergence });
   if (task) {
     propagateConvergence(db, task.id);
+    autoCompleteIfConverged(db, task.id);
+  }
+}
+
+/**
+ * Automatically mark task as completed if convergence has reached threshold
+ */
+export function autoCompleteIfConverged(db: Database, taskId: number): void {
+  const task = getTaskByInternalId(db, taskId);
+  if (!task) return;
+
+  // Skip if already completed or cancelled
+  if (task.status === TaskStatus.COMPLETED || task.status === TaskStatus.CANCELLED) {
+    return;
+  }
+
+  // Check if converged (within epsilon threshold)
+  if (isConverged(task.convergence)) {
+    updateTask(db, task.hash_id, { status: TaskStatus.COMPLETED });
   }
 }
 

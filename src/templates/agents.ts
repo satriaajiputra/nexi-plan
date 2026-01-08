@@ -7,7 +7,6 @@ This project uses \`np\` CLI for task tracking. When working on this project:
 **Workflow Shortcuts:**
 - \`np next\` - Show what to work on next
 - \`np work <id>\` - View task + mark as in_progress
-- \`np done <id>\` - Mark as completed
 - \`np start <id>\` - Mark as in_progress
 - \`np block <id>\` - Mark as blocked
 
@@ -29,7 +28,8 @@ This project uses \`np\` CLI for task tracking. When working on this project:
 
 **Full Commands:**
 - \`np update --status <STATUS> <id>\` - Update status
-- \`np update --convergence <VALUE> <id>\` - Update convergence
+- \`np update --convergence <VALUE> <id>\` - Update convergence (use 0.005 to auto-complete)
+- \`np done <id>\` - Just updates status to completed
 - \`np del <id>\` - Delete task
 
 ## Convergence Values
@@ -39,6 +39,8 @@ This project uses \`np\` CLI for task tracking. When working on this project:
 - 0.5 = In progress
 - 0.7 = Started
 - 1.0 = Not started
+
+**Auto-Completion:** Tasks are automatically marked as completed when convergence reaches <= 0.01 (1%). This threshold handles floating-point imprecision and ensures reliable "done" detection.
 
 ## Task Types
 
@@ -60,7 +62,7 @@ This project uses \`np\` CLI for task tracking. When working on this project:
 2. User says: "Implement task {{prefix}}-abc123"
 3. Run: \`np work {{prefix}}-abc123\` → Shows details, marks as in_progress
 4. Work on implementation
-5. When done: \`np done {{prefix}}-abc123\` → Marks completed, sets convergence to 0
+5. When done: \`np update {{prefix}}-abc123 --convergence 0.005\` → Auto-completes the task (threshold <= 0.01)
 
 ## When to Block a Task
 
@@ -139,4 +141,6 @@ This means:
 - Epic tasks are heavily influenced by their children (weight 1.0)
 - Bug fixes have less impact on parent convergence (weight 3.0)
 - Completed tasks (convergence = 0) pull parent toward completion
+
+**Threshold:** Values within 0.01 (1%) of 0 are snapped to 0, and the task is automatically marked as completed. This prevents floating-point issues from blocking completion.
 `;

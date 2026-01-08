@@ -47,8 +47,10 @@ export function formatTask(task: Task, showHashId: boolean = true, suffix?: numb
   const priorityStr = `(P${task.priority})`;
   const statusStr = `[${formatTaskStatus(task.status)}]`;
   const convStr = formatConvergence(task.convergence);
+  const converged = isConvergenceConverged(task.convergence);
+  const readyIndicator = converged && task.status !== "completed" ? " *" : "";
 
-  return `${prefix}${typeStr} ${task.name} ${priorityStr} ${statusStr} ${convStr}`;
+  return `${prefix}${typeStr} ${task.name} ${priorityStr} ${statusStr} ${convStr}${readyIndicator}`;
 }
 
 /**
@@ -56,6 +58,13 @@ export function formatTask(task: Task, showHashId: boolean = true, suffix?: numb
  */
 export function convergenceToString(convergence: number): string {
   return convergence.toFixed(2);
+}
+
+/**
+ * Check if convergence is within auto-complete threshold
+ */
+export function isConvergenceConverged(convergence: number): boolean {
+  return convergence <= 0.01;
 }
 
 /**
@@ -106,12 +115,13 @@ function formatTaskNodeRecursive(node: TaskNode, indent: string): string {
  */
 export function formatTaskDetails(task: Task): string {
   const lines: string[] = [];
+  const converged = isConvergenceConverged(task.convergence);
 
   lines.push(`=== ${task.hash_id}: ${task.name} ===`);
   lines.push(`Type: ${formatTaskType(task.type)}`);
   lines.push(`Priority: ${task.priority}`);
   lines.push(`Status: ${formatTaskStatus(task.status)}`);
-  lines.push(`Convergence: ${convergenceToString(task.convergence)}`);
+  lines.push(`Convergence: ${convergenceToString(task.convergence)}${converged ? " (ready to complete)" : ""}`);
 
   if (task.parent_id) {
     lines.push(`Parent ID: ${task.parent_id}`);

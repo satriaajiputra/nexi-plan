@@ -126,20 +126,50 @@ Task name prefixes auto-detect properties:
 
 ## Convergence
 
-Parent task convergence is a weighted average of children's convergence:
+Convergence measures how much work remains on a task, from 1.0 (not started) to 0.0 (completed).
+
+### Values
+
+| Value | Meaning |
+|-------|--------|
+| 1.0 | Not started |
+| 0.7 | Just started |
+| 0.5 | Halfway done |
+| 0.3 | Almost done |
+| <= 0.01 | Ready to complete |
+
+### Auto-Completion
+
+When convergence reaches <= 0.01, the task is automatically marked as completed. Use `np update <id> --convergence 0.005` to complete a task.
+
+### Parent Task Calculation
+
+Parent tasks automatically calculate convergence as a weighted average of their children:
 
 ```
 Parent Convergence = Σ(Child Convergence × Child Weight) / Σ(Child Weights)
 ```
 
-- 0.0 = Completed
-- 0.5 = Halfway done
-- 1.0 = Not started
+**Weights:**
+- Epic (weight 1.0) - heavily influenced by children
+- Task (weight 2.0) - balanced influence
+- Bug (weight 3.0) - less impact on parent
 
-Excludes cancelled tasks from calculation.
+**Example:**
+```
+epic: Payment System (0.4)
+├── Database schema (0.0) ✓
+├── API endpoints (0.0) ✓
+└── Stripe integration (0.8)
+```
 
-## ⚠️ AI Safety Warning
+Parent convergence = (0×1 + 0×1 + 0.8×2) / (1+1+2) = 1.6/4 = 0.4
 
+**Note:** Cancelled tasks are excluded from parent calculation.
+
+> [!WARNING]
+> **AI Safety Warning**
+>
 > **AI coding agents can make mistakes.** Always double-check the code they generate.
 >
 > - AI can produce bugs, security vulnerabilities, or incorrect logic

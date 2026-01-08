@@ -2,6 +2,7 @@ import Database from "bun:sqlite";
 import { getDatabase, closeDatabase } from "../db/client.js";
 import { getTaskById, updateTask as dbUpdateTask } from "../db/queries.js";
 import { propagateConvergence } from "../services/convergence.js";
+import { snapToZero } from "../utils/convergence.js";
 import { success, error, info, parseTaskId } from "../utils/format.js";
 import { readDescription } from "../utils/fs.js";
 import type { TaskStatus } from "../models/task.js";
@@ -42,7 +43,7 @@ export async function updateTask(hashId: string, options: UpdateOptions): Promis
     }
 
     if (options.convergence !== undefined) {
-      updates.convergence = options.convergence;
+      updates.convergence = snapToZero(options.convergence);
     }
 
     // Update task
