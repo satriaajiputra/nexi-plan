@@ -2,6 +2,20 @@
 
 A CLI task tracker for your projects. Track work items, bugs, and epics with hierarchical relationships and convergence tracking.
 
+## Table of Contents
+
+- [What is this?](#what-is-this)
+- [Install](#install)
+- [Initialize in your project](#initialize-in-your-project)
+- [Quick Start](#quick-start)
+- [Commands](#commands)
+- [Smart Prefixes](#smart-prefixes)
+- [Task Properties](#task-properties)
+- [Convergence](#convergence)
+- [Claude Code Integration](#claude-code-integration)
+- [Common Workflows Guide](#common-workflows-guide)
+- [Inspiration](#inspiration)
+
 ## What is this?
 
 `np` is a command-line tool you run in your project directory to track tasks. Each task gets a short ID (e.g., `np-abc123`) that you can reference in commits, PRs, or Claude Code conversations.
@@ -197,6 +211,16 @@ For detailed real-world examples of how to use `np` with AI coding agents, see [
 - **Task delegation** to AI
 - **Tips** for maximum effectiveness
 
+## Inspiration
+
+nexi-plan was inspired by my work with my Big Bro, Kyle, while he was building a self-healing system. Watching how he approached system resilience and automation sparked the idea for a task tracker that could:
+
+- **Automate tedious work** - Just as his system automatically detected and recovered from failures, I wanted `np` to automatically handle convergence calculations and task completions
+- **Provide visibility** - His self-healing dashboard showed system health at a glance; `np` gives you immediate visibility into your task progress
+- **Reduce cognitive load** - By automatically tracking parent task progress from children, developers can focus on the work itself rather than manual status updates
+
+The convergence concept came from thinking about how complex systems naturally move toward equilibrium, and how breaking down large tasks into smaller pieces (children) naturally shows progress on the larger goal (parent).
+
 ---
 
-Built with [Bun](https://bun.com)
+Built with ❤️ & ☕ by [Satria Aji Putra](https://github.com/satriaajiputra)
