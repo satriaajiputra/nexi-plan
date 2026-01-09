@@ -1,11 +1,18 @@
-import { existsSync, mkdirSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { closeDatabase, initDatabase, clearProjectRootCache } from "../db/client.js";
+import {
+	clearProjectRootCache,
+	closeDatabase,
+	initDatabase,
+} from "../db/client.js";
 import type { PlanConfig } from "../models/task.js";
 import { savePlanConfig } from "../services/id.js";
 import { AGENTS_TEMPLATE } from "../templates/agents.js";
 
-export async function init(prefix: string = "np", cwd: string = process.cwd()): Promise<void> {
+export async function init(
+	prefix: string = "np",
+	cwd: string = process.cwd(),
+): Promise<void> {
 	// Construct plan directory path directly - don't search parent for init
 	const planDir = join(cwd, ".plan");
 
@@ -35,6 +42,14 @@ export async function init(prefix: string = "np", cwd: string = process.cwd()): 
 
 	try {
 		Bun.write(agentsPath, AGENTS_TEMPLATE);
+		// Echo "- See AGENTS.md for more details." to CLAUDE.md if it exists
+		const claudePath = join(planDir, "../", "CLAUDE.md");
+		if (existsSync(claudePath)) {
+			appendFileSync(
+				claudePath,
+				"\n- See [AGENTS.md](AGENTS.md) for more details.\n",
+			);
+		}
 	} catch (err) {
 		throw new Error(`Failed to create AGENTS.md: ${(err as Error).message}`);
 	}

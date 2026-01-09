@@ -32,15 +32,45 @@ This project uses \`np\` CLI for task tracking. When working on this project:
 - \`np done <id>\` - Just updates status to completed
 - \`np del <id>\` - Delete task
 
-## Convergence Values
+## What is Convergence?
 
-- 0.0 = Completed
-- 0.3 = Mostly done
-- 0.5 = In progress
-- 0.7 = Started
-- 1.0 = Not started
+Convergence measures **how much work remains** on a task. It's a value from 0.0 to 1.0:
 
-**Auto-Completion:** Tasks are automatically marked as completed when convergence reaches <= 0.01 (1%). This threshold handles floating-point imprecision and ensures reliable "done" detection.
+- **1.0** = Not started (100% work remaining)
+- **0.5** = Halfway done (50% remaining)
+- **0.0** = Completed (0% remaining)
+
+**For AI agents:** Think of it as "effort remaining" rather than "progress made".
+
+### Values Reference
+
+| Value | Meaning |
+|-------|--------|
+| 1.0 | Not started |
+| 0.7 | Just started |
+| 0.5 | Halfway done |
+| 0.3 | Almost done |
+| <= 0.01 | Ready to complete |
+
+### How to Complete a Task
+
+When you're done with a task, run:
+
+\`\`\`bash
+np update <id> --convergence 0.005
+\`\`\`
+
+This sets convergence within the 0.01 threshold, which:
+1. Snaps the value to 0.0
+2. Automatically marks the task as completed
+
+### Auto-Completion
+
+When convergence reaches <= 0.01:
+- The value is snapped to 0
+- Status is automatically set to "completed"
+
+This prevents floating-point issues from blocking completion.
 
 ## Task Types
 
@@ -137,10 +167,10 @@ Parent task convergence is calculated as a weighted average of its children:
 Parent Convergence = Σ(Child Convergence × Child Weight) / Σ(Child Weights)
 \`\`\`
 
-This means:
-- Epic tasks are heavily influenced by their children (weight 1.0)
-- Bug fixes have less impact on parent convergence (weight 3.0)
-- Completed tasks (convergence = 0) pull parent toward completion
+**Weights:**
+- Epic (1.0) - heavily influenced by children
+- Task (2.0) - balanced influence
+- Bug (3.0) - less impact on parent
 
-**Threshold:** Values within 0.01 (1%) of 0 are snapped to 0, and the task is automatically marked as completed. This prevents floating-point issues from blocking completion.
+**Note:** Cancelled tasks are excluded from the calculation.
 `;

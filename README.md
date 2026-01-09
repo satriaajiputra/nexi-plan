@@ -213,7 +213,7 @@ For detailed real-world examples of how to use `np` with AI coding agents, see [
 
 ## Inspiration
 
-nexi-plan was inspired by my work with my Big Bro, Kyle, while he was building a self-healing system. Watching how he approached system resilience and automation sparked the idea for a task tracker that could:
+nexi-plan was inspired by my work with my Big Bro, while he was building a self-healing system. Watching how he approached system resilience and automation sparked the idea for a task tracker that could:
 
 - **Automate tedious work** - Just as his system automatically detected and recovered from failures, I wanted `np` to automatically handle convergence calculations and task completions
 - **Provide visibility** - His self-healing dashboard showed system health at a glance; `np` gives you immediate visibility into your task progress
@@ -223,4 +223,4 @@ The convergence concept came from thinking about how complex systems naturally m
 
 ---
 
-Built with ❤️ & ☕ by [Satria Aji Putra](https://github.com/satriaajiputra)
+Built with ☕ by [Satria Aji Putra](https://github.com/satriaajiputra)
