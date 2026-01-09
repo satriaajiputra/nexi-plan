@@ -283,7 +283,6 @@ For detailed real-world examples of how to use `np` with AI coding agents, see [
 nexi-plan was inspired by my work with my Big Bro, while he was building a self-healing system. Watching how he approached system resilience and automation sparked the idea for a task tracker that could:
 
 - **Automate tedious work** - Just as his system automatically detected and recovered from failures, I wanted `np` to automatically handle convergence calculations and task completions
-- **Provide visibility** - His self-healing dashboard showed system health at a glance; `np` gives you immediate visibility into your task progress
 - **Reduce cognitive load** - By automatically tracking parent task progress from children, developers can focus on the work itself rather than manual status updates
 
 The convergence concept came from thinking about how complex systems naturally move toward equilibrium, and how breaking down large tasks into smaller pieces (children) naturally shows progress on the larger goal (parent).
