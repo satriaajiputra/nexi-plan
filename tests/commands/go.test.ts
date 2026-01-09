@@ -8,8 +8,6 @@ import {
 	type getDatabase,
 	initDatabase,
 } from "../../src/db/client.ts";
-import { getTaskById } from "../../src/db/queries.ts";
-import { TaskStatus } from "../../src/models/task.ts";
 import { captureConsole, createTestTask } from "../fixtures.ts";
 
 describe("commands/go", () => {
@@ -37,17 +35,15 @@ describe("commands/go", () => {
 		}
 	});
 
-	test("should find task by exact ID and mark as in_progress", async () => {
+	test("should find task by exact ID and view details", async () => {
 		const task = createTestTask(db, {
 			name: "Target Task",
-			status: TaskStatus.PENDING,
 		});
 
 		const console = captureConsole();
 		await go(task.hash_id, testDir);
 
 		expect(console.output).toContain("Target Task");
-		expect(console.output).toContain("in_progress");
 	});
 
 	test("should fallback to fuzzy search", async () => {
@@ -60,16 +56,17 @@ describe("commands/go", () => {
 		expect(console.output).toContain("Login feature");
 	});
 
-	test("should mark found task as in_progress", async () => {
+	test("should view found task details", async () => {
 		const task = createTestTask(db, {
 			name: "Search task",
-			status: TaskStatus.PENDING,
 		});
 
 		await go("search", testDir);
 
-		const updated = getTaskById(db, task.hash_id)!;
-		expect(updated.status).toBe(TaskStatus.IN_PROGRESS);
+		const console = captureConsole();
+		await go("search", testDir);
+
+		expect(console.output).toContain("Search task");
 	});
 
 	test("should show message for no matches", async () => {

@@ -6,8 +6,6 @@ import { list } from "./commands/list.js";
 import { view } from "./commands/view.js";
 import { updateTask as update } from "./commands/update.js";
 import { deleteTask as del } from "./commands/delete.js";
-import { start } from "./commands/start.js";
-import { done } from "./commands/done.js";
 import { block } from "./commands/block.js";
 import { work } from "./commands/work.js";
 import { next as nextCmd } from "./commands/next.js";
@@ -146,26 +144,6 @@ async function main() {
       break;
     }
 
-    case "start": {
-      const id = getArg(args, 0);
-      if (!id) {
-        error("Missing task ID");
-        return;
-      }
-      await start(id);
-      break;
-    }
-
-    case "done": {
-      const id = getArg(args, 0);
-      if (!id) {
-        error("Missing task ID");
-        return;
-      }
-      await done(id);
-      break;
-    }
-
     case "block": {
       const id = getArg(args, 0);
       if (!id) {
@@ -237,26 +215,31 @@ COMMANDS:
     --deps <id>                 Parent task ID
 
   np ls [options]               List tasks in tree view
-    --wip                       Show only in_progress tasks
+    --wip                       Show work-in-progress tasks (convergence < 1.0 && > 0.01)
     --focus                     Show high-priority unblocked tasks
     --type <type>               Filter by type
 
   np view <id>                  View full task details
 
-  np update [id] [options]        Update task (or CLI if no id)
-    --status <status>           New status: pending, in_progress, completed, blocked, cancelled
-    --convergence <0-1>         Convergence value (0=done, 1=not started)
+  np update [id] [options]      Update task (or CLI if no id)
+    --status <status>           New status: blocked, cancelled
+    --convergence <0-1>         Convergence value (0.01=done and tested, 1=not started)
     -d, --description <text>    Update description (@file for file input)
 
   np del <id> [--force]         Delete task (cascades to children)
 
-  np start <id>                 Mark task as in_progress
-  np done <id>                  Mark task as completed
   np block <id>                 Mark task as blocked
-  np work <id>                  View task + mark as in_progress
+  np work <id>                  View task details
   np next                       Show next task to work on
   np find <query>               Search tasks
-  np go <query>                 Find + work on task
+  np go <query>                 Find and work on task
+
+CONVERGENCE:
+  Values range from 1.0 (not started) to 0.01 (completed and tested).
+  Important: Only use 0.01 for completed tasks. Never use 0.0 or values below 0.01.
+  - 1.0 = Not started
+  - 0.5 = Halfway done
+  - 0.01 = Completed, tested, and verified
 
 SMART DETECTION:
   Task name prefixes auto-detect type and priority:
@@ -268,8 +251,8 @@ EXAMPLES:
   np add -n "fix: login CSS" -p 1
   np add -n "urgent: Implement auth"
   np ls --wip                   Show tasks in progress
-  np work myproj-abc123         View and start working
-  np done myproj-abc123         Mark as completed
+  np work myproj-abc123         View task details
+  np update myproj-abc123 --convergence 0.5
   np go login                   Find and work on login task
 `);
 }

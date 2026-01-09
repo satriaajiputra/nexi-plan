@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { TaskStatus, TaskType } from "../../src/models/task.ts";
 import {
-	autoCompleteIfConverged,
 	calculateParentConvergence,
 	getWeight,
 	isLeafTask,
@@ -64,7 +63,7 @@ describe("services/convergence", () => {
 				type: TaskType.TASK,
 				parent_id: parent.id,
 				convergence: 0.5,
-				status: TaskStatus.PENDING,
+				status: null,
 			});
 			createTestTask(db, {
 				name: "Cancelled",
@@ -214,86 +213,6 @@ describe("services/convergence", () => {
 				.query("SELECT * FROM tasks WHERE id = ?")
 				.get(epic.id) as any;
 			expect(updatedEpic.convergence).toBeLessThan(1);
-
-			cleanupTestDb(db);
-		});
-	});
-
-	describe("autoCompleteIfConverged", () => {
-		test("should mark task as completed when converged", () => {
-			const db = createTestDb();
-			const task = createTestTask(db, { name: "Task", convergence: 0.0 });
-
-			autoCompleteIfConverged(db, task.id);
-
-			const updated = db
-				.query("SELECT * FROM tasks WHERE hash_id = ?")
-				.get(task.hash_id) as any;
-			expect(updated.status).toBe("completed");
-
-			cleanupTestDb(db);
-		});
-
-		test("should not mark task as completed when not converged", () => {
-			const db = createTestDb();
-			const task = createTestTask(db, { name: "Task", convergence: 0.5 });
-
-			autoCompleteIfConverged(db, task.id);
-
-			const updated = db
-				.query("SELECT * FROM tasks WHERE hash_id = ?")
-				.get(task.hash_id) as any;
-			expect(updated.status).toBe("pending");
-
-			cleanupTestDb(db);
-		});
-
-		test("should not mark already completed task", () => {
-			const db = createTestDb();
-			const task = createTestTask(db, {
-				name: "Task",
-				status: TaskStatus.COMPLETED,
-				convergence: 0.5,
-			});
-
-			autoCompleteIfConverged(db, task.id);
-
-			const updated = db
-				.query("SELECT * FROM tasks WHERE hash_id = ?")
-				.get(task.hash_id) as any;
-			expect(updated.status).toBe("completed");
-
-			cleanupTestDb(db);
-		});
-
-		test("should not mark cancelled task", () => {
-			const db = createTestDb();
-			const task = createTestTask(db, {
-				name: "Task",
-				status: TaskStatus.CANCELLED,
-				convergence: 0.0,
-			});
-
-			autoCompleteIfConverged(db, task.id);
-
-			const updated = db
-				.query("SELECT * FROM tasks WHERE hash_id = ?")
-				.get(task.hash_id) as any;
-			expect(updated.status).toBe("cancelled");
-
-			cleanupTestDb(db);
-		});
-
-		test("should auto-converge at threshold 0.01", () => {
-			const db = createTestDb();
-			const task = createTestTask(db, { name: "Task", convergence: 0.01 });
-
-			autoCompleteIfConverged(db, task.id);
-
-			const updated = db
-				.query("SELECT * FROM tasks WHERE hash_id = ?")
-				.get(task.hash_id) as any;
-			expect(updated.status).toBe("completed");
 
 			cleanupTestDb(db);
 		});

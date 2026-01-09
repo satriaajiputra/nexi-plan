@@ -37,40 +37,10 @@ describe("commands/update", () => {
 		}
 	});
 
-	test("should update status to completed", async () => {
-		const task = createTestTask(db, {
-			name: "Task",
-			status: TaskStatus.PENDING,
-		});
-
-		await updateTask(task.hash_id, {
-			status: TaskStatus.COMPLETED,
-			cwd: testDir,
-		});
-
-		const updated = getTaskById(db, task.hash_id)!;
-		expect(updated.status).toBe(TaskStatus.COMPLETED);
-	});
-
-	test("should update status to in_progress", async () => {
-		const task = createTestTask(db, {
-			name: "Task",
-			status: TaskStatus.PENDING,
-		});
-
-		await updateTask(task.hash_id, {
-			status: TaskStatus.IN_PROGRESS,
-			cwd: testDir,
-		});
-
-		const updated = getTaskById(db, task.hash_id)!;
-		expect(updated.status).toBe(TaskStatus.IN_PROGRESS);
-	});
-
 	test("should update status to blocked", async () => {
 		const task = createTestTask(db, {
 			name: "Task",
-			status: TaskStatus.PENDING,
+			status: null,
 		});
 
 		await updateTask(task.hash_id, {
@@ -80,6 +50,21 @@ describe("commands/update", () => {
 
 		const updated = getTaskById(db, task.hash_id)!;
 		expect(updated.status).toBe(TaskStatus.BLOCKED);
+	});
+
+	test("should update status to cancelled", async () => {
+		const task = createTestTask(db, {
+			name: "Task",
+			status: null,
+		});
+
+		await updateTask(task.hash_id, {
+			status: TaskStatus.CANCELLED,
+			cwd: testDir,
+		});
+
+		const updated = getTaskById(db, task.hash_id)!;
+		expect(updated.status).toBe(TaskStatus.CANCELLED);
 	});
 
 	test("should update convergence", async () => {
@@ -129,7 +114,7 @@ describe("commands/update", () => {
 	test("should show task not found for invalid ID", async () => {
 		const console = captureConsole();
 		await updateTask("nonexistent", {
-			status: TaskStatus.COMPLETED,
+			status: TaskStatus.BLOCKED,
 			cwd: testDir,
 		});
 
@@ -139,20 +124,20 @@ describe("commands/update", () => {
 	test("should update multiple fields at once", async () => {
 		const task = createTestTask(db, {
 			name: "Task",
-			status: TaskStatus.PENDING,
+			status: null,
 			convergence: 1.0,
 			description: "Old",
 		});
 
 		await updateTask(task.hash_id, {
-			status: TaskStatus.COMPLETED,
+			status: TaskStatus.BLOCKED,
 			convergence: 0.0,
 			description: "New",
 			cwd: testDir,
 		});
 
 		const updated = getTaskById(db, task.hash_id)!;
-		expect(updated.status).toBe(TaskStatus.COMPLETED);
+		expect(updated.status).toBe(TaskStatus.BLOCKED);
 		expect(updated.convergence).toBe(0.0);
 		expect(updated.description).toBe("New");
 	});

@@ -26,12 +26,13 @@ export function cleanupTestDb(db: Database): void {
 
 /**
  * Default task values for test fixtures
+ * Status is null by default (convergence-based)
  */
 export const defaultTaskValues = {
 	name: "Test Task",
 	type: "task" as TaskType,
 	priority: 3 as TaskPriority,
-	status: "pending" as TaskStatus,
+	status: null as TaskStatus | null,
 	convergence: 1.0,
 	description: undefined as string | undefined,
 	parent_id: undefined as number | undefined,
@@ -50,6 +51,7 @@ export function createTestTask(
 		...overrides,
 	};
 
+	// Build query dynamically based on whether status is provided
 	const query = db.query(`
     INSERT INTO tasks (hash_id, name, type, priority, status, convergence, description, parent_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -61,7 +63,7 @@ export function createTestTask(
 		task.name,
 		task.type,
 		task.priority,
-		task.status,
+		task.status ?? null,
 		task.convergence,
 		task.description ?? null,
 		task.parent_id ?? null,
@@ -188,21 +190,24 @@ export function createStatusTestTasks(db: Database) {
 	tasks.push(
 		createTestTask(db, {
 			name: "Pending Task",
-			status: TaskStatus.PENDING,
+			status: null,
+			convergence: 1.0,
 			priority: 1,
 		}),
 	);
 	tasks.push(
 		createTestTask(db, {
-			name: "In Progress Task",
-			status: TaskStatus.IN_PROGRESS,
+			name: "Not Converged Task",
+			status: null,
+			convergence: 0.5,
 			priority: 1,
 		}),
 	);
 	tasks.push(
 		createTestTask(db, {
-			name: "Completed Task",
-			status: TaskStatus.COMPLETED,
+			name: "Converged Task",
+			status: null,
+			convergence: 0.0,
 			priority: 1,
 		}),
 	);
@@ -223,7 +228,8 @@ export function createStatusTestTasks(db: Database) {
 	tasks.push(
 		createTestTask(db, {
 			name: "Low Priority Pending",
-			status: TaskStatus.PENDING,
+			status: null,
+			convergence: 1.0,
 			priority: 5,
 		}),
 	);

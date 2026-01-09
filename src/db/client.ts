@@ -2,6 +2,7 @@ import Database from "bun:sqlite";
 import { existsSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { SCHEMA_SQL } from "./schema.js";
+import { runMigrations, initMigrationSystem } from "./migrations.js";
 
 const PLAN_DIR = ".plan";
 const DB_NAME = "tasks.db";
@@ -148,6 +149,9 @@ export function initDatabase(dbPath: string = getDbPath()): Database {
 	// Execute schema
 	db.run(SCHEMA_SQL);
 
+	// Initialize migration system for new databases
+	initMigrationSystem(db);
+
 	return db;
 }
 
@@ -162,6 +166,10 @@ export function getDatabase(dbPath: string = getDbPath()): Database {
 	}
 	const db = new Database(dbPath);
 	db.run("PRAGMA foreign_keys = ON");
+
+	// Run pending migrations
+	runMigrations(db);
+
 	return db;
 }
 

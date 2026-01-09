@@ -65,21 +65,22 @@ describe("commands/list", () => {
 		const console = captureConsole();
 		await list({ wip: true, cwd: testDir });
 
-		expect(console.output).toContain("In Progress Task");
-		expect(console.output).not.toContain("Completed Task");
-		expect(console.output).not.toContain("Pending Task");
+		expect(console.output).toContain("Not Converged Task");
+		// Use more specific patterns to avoid substring matches
+		expect(console.output).not.toMatch(/: Converged Task /);
+		expect(console.output).not.toMatch(/: Pending Task /);
 	});
 
 	test("should filter by --focus flag", async () => {
 		createTestTask(db, {
 			name: "High Priority",
 			priority: 1,
-			status: TaskStatus.PENDING,
+			status: null,
 		});
 		createTestTask(db, {
 			name: "Medium Priority",
 			priority: 3,
-			status: TaskStatus.PENDING,
+			status: null,
 		});
 		createTestTask(db, {
 			name: "Blocked Task",
@@ -89,7 +90,7 @@ describe("commands/list", () => {
 		createTestTask(db, {
 			name: "Low Priority",
 			priority: 5,
-			status: TaskStatus.PENDING,
+			status: null,
 		});
 
 		const console = captureConsole();
@@ -116,13 +117,15 @@ describe("commands/list", () => {
 		createTestTask(db, {
 			name: "Bug WIP",
 			type: TaskType.BUG,
-			status: TaskStatus.IN_PROGRESS,
+			status: null,
+			convergence: 0.5,
 			priority: 1,
 		});
 		createTestTask(db, {
 			name: "Bug Pending",
 			type: TaskType.BUG,
-			status: TaskStatus.PENDING,
+			status: null,
+			convergence: 1.0,
 			priority: 1,
 		});
 

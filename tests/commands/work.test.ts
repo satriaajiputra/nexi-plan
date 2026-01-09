@@ -9,7 +9,6 @@ import {
 	initDatabase,
 } from "../../src/db/client.ts";
 import { getTaskById } from "../../src/db/queries.ts";
-import { TaskStatus } from "../../src/models/task.ts";
 import { captureConsole, createTestTask } from "../fixtures.ts";
 
 describe("commands/work", () => {
@@ -37,10 +36,9 @@ describe("commands/work", () => {
 		}
 	});
 
-	test("should show task details and mark as in_progress", async () => {
+	test("should show task details", async () => {
 		const task = createTestTask(db, {
 			name: "Work Task",
-			status: TaskStatus.PENDING,
 		});
 
 		const console = captureConsole();
@@ -48,19 +46,17 @@ describe("commands/work", () => {
 
 		expect(console.output).toContain(task.hash_id);
 		expect(console.output).toContain("Work Task");
-		expect(console.output).toContain("in_progress");
 	});
 
-	test("should update status to in_progress", async () => {
+	test("should show ready to work message", async () => {
 		const task = createTestTask(db, {
 			name: "Task",
-			status: TaskStatus.PENDING,
 		});
 
+		const console = captureConsole();
 		await work(task.hash_id, testDir);
 
-		const updated = getTaskById(db, task.hash_id)!;
-		expect(updated.status).toBe(TaskStatus.IN_PROGRESS);
+		expect(console.output).toContain("ready to work on");
 	});
 
 	test("should show task not found for invalid ID", async () => {

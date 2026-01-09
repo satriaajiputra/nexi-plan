@@ -36,21 +36,24 @@ describe("commands/next", () => {
 		}
 	});
 
-	test("should show highest priority pending/in_progress task", async () => {
+	test("should show highest priority non-converged task", async () => {
 		createTestTask(db, {
 			name: "P3 Task",
 			priority: 3,
-			status: TaskStatus.PENDING,
+			status: null,
+			convergence: 1.0,
 		});
 		createTestTask(db, {
 			name: "P1 Task",
 			priority: 1,
-			status: TaskStatus.PENDING,
+			status: null,
+			convergence: 1.0,
 		});
 		createTestTask(db, {
 			name: "P2 Task",
 			priority: 2,
-			status: TaskStatus.PENDING,
+			status: null,
+			convergence: 1.0,
 		});
 
 		const console = captureConsole();
@@ -61,16 +64,18 @@ describe("commands/next", () => {
 		expect(console.output).not.toContain("P3 Task");
 	});
 
-	test("should prefer in_progress over pending for same priority", async () => {
+	test("should prefer tasks closer to convergence for same priority", async () => {
 		createTestTask(db, {
 			name: "P1 Pending",
 			priority: 1,
-			status: TaskStatus.PENDING,
+			status: null,
+			convergence: 1.0,
 		});
 		createTestTask(db, {
 			name: "P1 WIP",
 			priority: 1,
-			status: TaskStatus.IN_PROGRESS,
+			status: null,
+			convergence: 0.5,
 		});
 
 		const console = captureConsole();
@@ -79,15 +84,15 @@ describe("commands/next", () => {
 		expect(console.output).toContain("P1 WIP");
 	});
 
-	test("should show message when all tasks completed/blocked", async () => {
-		createTestTask(db, { name: "Completed", status: TaskStatus.COMPLETED });
+	test("should show message when all tasks converged/blocked", async () => {
+		createTestTask(db, { name: "Converged", status: null, convergence: 0.0 });
 		createTestTask(db, { name: "Blocked", status: TaskStatus.BLOCKED });
 
 		const console = captureConsole();
 		await nextCmd(testDir);
 
 		expect(console.output).toContain("No pending tasks");
-		expect(console.output).toContain("completed");
+		expect(console.output).toContain("converged");
 		expect(console.output).toContain("blocked");
 	});
 
@@ -96,12 +101,12 @@ describe("commands/next", () => {
 		await nextCmd(testDir);
 
 		expect(console.output).toContain("No pending tasks found");
-		expect(console.output).toContain("completed");
+		expect(console.output).toContain("converged");
 		expect(console.output).toContain("blocked");
 		expect(console.output).toContain("cancelled");
 	});
 
-	test("should fallback to highest priority pending task", async () => {
+	test("should fallback to highest priority non-converged task", async () => {
 		createTestTask(db, {
 			name: "P1 Blocked",
 			priority: 1,
@@ -110,7 +115,8 @@ describe("commands/next", () => {
 		createTestTask(db, {
 			name: "P2 Pending",
 			priority: 2,
-			status: TaskStatus.PENDING,
+			status: null,
+			convergence: 1.0,
 		});
 
 		const console = captureConsole();

@@ -2,8 +2,6 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { block } from "../../src/commands/block.ts";
-import { done } from "../../src/commands/done.ts";
-import { start } from "../../src/commands/start.ts";
 import {
 	clearProjectRootCache,
 	closeDatabase,
@@ -39,53 +37,11 @@ describe("commands/status", () => {
 		}
 	});
 
-	describe("start", () => {
-		test("should set status to in_progress", async () => {
-			const task = createTestTask(db, {
-				name: "Task",
-				status: TaskStatus.PENDING,
-			});
-
-			await start(task.hash_id, testDir);
-
-			const updated = getTaskById(db, task.hash_id)!;
-			expect(updated.status).toBe(TaskStatus.IN_PROGRESS);
-		});
-
-		test("should show task not found for invalid ID", async () => {
-			const console = captureConsole();
-			await start("nonexistent-id", testDir);
-
-			expect(console.output).toContain("not found");
-		});
-	});
-
-	describe("done", () => {
-		test("should set status to completed", async () => {
-			const task = createTestTask(db, {
-				name: "Task",
-				status: TaskStatus.PENDING,
-			});
-
-			await done(task.hash_id, testDir);
-
-			const updated = getTaskById(db, task.hash_id)!;
-			expect(updated.status).toBe(TaskStatus.COMPLETED);
-		});
-
-		test("should show task not found for invalid ID", async () => {
-			const console = captureConsole();
-			await done("nonexistent-id", testDir);
-
-			expect(console.output).toContain("not found");
-		});
-	});
-
 	describe("block", () => {
 		test("should set status to blocked", async () => {
 			const task = createTestTask(db, {
 				name: "Task",
-				status: TaskStatus.PENDING,
+				status: null,
 			});
 
 			await block(task.hash_id, testDir);

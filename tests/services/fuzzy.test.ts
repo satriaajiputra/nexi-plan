@@ -13,7 +13,7 @@ describe("services/fuzzy", () => {
 		name,
 		type: TaskType.TASK,
 		priority: 3,
-		status: TaskStatus.PENDING,
+		status: null,
 		convergence: 1.0,
 		description,
 		created_at: new Date().toISOString(),

@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync } from "node:fs";
+import { appendFileSync, copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import {
 	clearProjectRootCache,
@@ -42,14 +42,15 @@ export async function init(
 
 	try {
 		Bun.write(agentsPath, AGENTS_TEMPLATE);
-		// Echo "- See AGENTS.md for more details." to CLAUDE.md if it exists
-		const claudePath = join(planDir, "../", "CLAUDE.md");
+		// Change CLAUDE.md with AGENTS.md
+		// 1. Check if CLAUDE.md exists and make backup
+		const claudePath = join(cwd, "CLAUDE.md");
 		if (existsSync(claudePath)) {
-			appendFileSync(
-				claudePath,
-				"\n- See [AGENTS.md](AGENTS.md) for more details.\n",
-			);
+			const backupPath = join(cwd, "CLAUDE.bak.md");
+			copyFileSync(claudePath, backupPath);
 		}
+		// 2. Write AGENTS.md content to CLAUDE.md
+		Bun.write(claudePath, AGENTS_TEMPLATE);
 	} catch (err) {
 		throw new Error(`Failed to create AGENTS.md: ${(err as Error).message}`);
 	}

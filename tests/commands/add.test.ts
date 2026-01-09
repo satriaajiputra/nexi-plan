@@ -46,7 +46,7 @@ describe("commands/add", () => {
 		expect(tasks[0]!.name).toBe("Test Task");
 		expect(tasks[0]!.type).toBe(TaskType.TASK);
 		expect(tasks[0]!.priority).toBe(3);
-		expect(tasks[0]!.status).toBe(TaskStatus.PENDING);
+		expect(tasks[0]!.status).toBeNull();
 		expect(tasks[0]!.convergence).toBe(1.0);
 	});
 

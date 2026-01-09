@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     name TEXT NOT NULL,
     type TEXT NOT NULL CHECK(type IN ('epic', 'task', 'bug')),
     priority INTEGER NOT NULL CHECK(priority BETWEEN 1 AND 5),
-    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'in_progress', 'completed', 'blocked', 'cancelled')),
+    status TEXT CHECK(status IN ('blocked', 'cancelled')),
     convergence REAL NOT NULL DEFAULT 1.0 CHECK(convergence BETWEEN 0 AND 1),
     description TEXT,
     parent_id INTEGER,

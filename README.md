@@ -12,6 +12,7 @@ A CLI task tracker for your projects. Track work items, bugs, and epics with hie
 - [Smart Prefixes](#smart-prefixes)
 - [Task Properties](#task-properties)
 - [Convergence](#convergence)
+- [Database Migrations](#database-migrations)
 - [Claude Code Integration](#claude-code-integration)
 - [Common Workflows Guide](#common-workflows-guide)
 - [Inspiration](#inspiration)
@@ -95,14 +96,15 @@ np add -n "urgent: database outage" # Auto-detects priority=1
 np next
 
 # Start working
-np work np-abc123  # Shows task details, marks as in_progress
+np work np-abc123  # Shows task details
 
-# Mark done
-np done np-abc123
+# Update progress
+np update np-abc123 --convergence 0.5  # Halfway done
+np update np-abc123 --convergence 0.01    # Completed and tested
 
 # List all
 np ls
-np ls --wip        # Work in progress only
+np ls --wip        # Work in progress only (convergence < 1.0 && > 0.01)
 np ls --focus      # High priority, unblocked
 
 # Search
@@ -117,15 +119,13 @@ np go api          # Find + immediately work on it
 | `np init [prefix]` | Create `.plan/` database in current directory |
 | `np add -n "name"` | Add task with smart defaults |
 | `np ls` | List all tasks in tree view |
-| `np ls --wip` | Show only in-progress tasks |
+| `np ls --wip` | Show work-in-progress tasks (convergence < 1.0 && > 0.01) |
 | `np view <id>` | Show full task details |
-| `np update <id> --status pending\|in_progress\|completed\|blocked\|cancelled` | Update status |
-| `np update <id> --convergence 0.5` | Update progress (0=done, 1=not started) |
+| `np update <id> --status blocked\|cancelled` | Update status (only blocked/cancelled) |
+| `np update <id> --convergence 0.5` | Update progress (0.01=done, 1=not started) |
 | `np del <id>` | Delete task (cascades to children) |
-| `np start <id>` | Mark as in_progress |
-| `np done <id>` | Mark as completed |
 | `np block <id>` | Mark as blocked |
-| `np work <id>` | View details + mark in_progress |
+| `np work <id>` | View task details |
 | `np next` | Suggest next task to work on |
 | `np find <query>` | Fuzzy search tasks |
 | `np go <query>` | Find + work on task |
@@ -151,11 +151,17 @@ Task name prefixes auto-detect properties:
 
 **Priority:** 1 (highest) to 5 (lowest), default: 3
 
-**Status:** `pending`, `in_progress`, `completed`, `blocked`, `cancelled`
+**Status:**
+- `blocked` - Task cannot proceed (e.g., waiting on dependencies)
+- `cancelled` - Task is no longer relevant
+- Other states are derived from convergence value:
+  - `pending` - convergence === 1.0 (not started)
+  - `not converged` - 0.01 < convergence < 1.0 (in progress)
+  - `converged` - convergence <= 0.01 (completed)
 
 ## Convergence
 
-Convergence measures how much work remains on a task, from 1.0 (not started) to 0.0 (completed).
+Convergence measures how much work remains on a task, from 1.0 (not started) to 0.01 (completed and tested).
 
 ### Values
 
@@ -165,11 +171,19 @@ Convergence measures how much work remains on a task, from 1.0 (not started) to 
 | 0.7 | Just started |
 | 0.5 | Halfway done |
 | 0.3 | Almost done |
-| <= 0.01 | Ready to complete |
+| 0.01 | Converged (completed and tested) |
 
-### Auto-Completion
+**Important:** Only set convergence to 0.01 when the task is actually complete, tested, and verified. Never set it to 0.0 or below 0.01.
 
-When convergence reaches <= 0.01, the task is automatically marked as completed. Use `np update <id> --convergence 0.005` to complete a task.
+### How to Complete a Task
+
+Set convergence to 0.01 when done (and tested!):
+
+```bash
+np update <id> --convergence 0.01
+```
+
+Tasks with convergence <= 0.01 are considered converged.
 
 ### Parent Task Calculation
 
@@ -195,6 +209,59 @@ epic: Payment System (0.4)
 Parent convergence = (0×1 + 0×1 + 0.8×2) / (1+1+2) = 1.6/4 = 0.4
 
 **Note:** Cancelled tasks are excluded from parent calculation.
+
+### Why Convergence-Based Status?
+
+Unlike traditional task trackers that use separate status fields (`pending`, `in progress`, `done`), `np` derives status directly from convergence. This design choice solves several real-world problems:
+
+**Prevents AI false-positive claims**
+- Traditional "done" status is binary and ambiguous—AI agents often mark tasks as complete when they're 80% done
+- With `np`, only convergence ≤ 0.01 means complete—clear threshold that prevents premature completion claims
+- AI agents must understand the work-remaining mental model, reducing false-positive "it's basically done" errors
+
+**Automatic status propagation**
+- When you update a child task's convergence, parent tasks automatically recalculate
+- No manual status updates needed—convergence drives everything
+- Hierarchical progress is always accurate and up-to-date
+
+**Continuous progress tracking**
+- Instead of discrete status jumps (pending → in progress → done), convergence captures granular progress
+- Better reflects real-world development where tasks are rarely truly "done" or "not done"
+- Weighted parent calculation accounts for different task types (epics vs tasks vs bugs)
+
+**Clear communication**
+- When discussing tasks with AI agents or teammates, convergence provides an objective measure
+- "This task is at 0.3 convergence" means "30% work remaining" - unambiguous and actionable
+- Reduces misalignment about what "almost done" means
+
+---
+
+## Database Migrations
+
+When you upgrade to a new version of `np`, your database will be automatically migrated when you run any `np` command.
+
+### How It Works
+
+- Database version is tracked using SQLite's `PRAGMA user_version`
+- Migrations run automatically when you open your database with a new version
+- Your data is preserved during migrations
+
+### Manual Migration
+
+If you want to explicitly run migrations:
+
+```bash
+# Run any np command - migrations happen automatically
+np ls
+```
+
+### Backup Before Major Updates
+
+For peace of mind, backup your database before updating:
+
+```bash
+cp .plan/tasks.db .plan/tasks.db.backup
+```
 
 ---
 

@@ -126,15 +126,15 @@ describe("db/schema", () => {
     test("should enforce foreign key cascade delete", () => {
       // Insert parent
       db.run(
-        `INSERT INTO tasks (hash_id, name, type, priority, status, convergence)
-         VALUES ('parent-1', 'Parent', 'epic', 1, 'pending', 1.0)`
+        `INSERT INTO tasks (hash_id, name, type, priority, convergence)
+         VALUES ('parent-1', 'Parent', 'epic', 1, 1.0)`
       );
       const parentId = (db.query("SELECT last_insert_rowid()").get() as any)["last_insert_rowid()"];
 
       // Insert child
       db.run(
-        `INSERT INTO tasks (hash_id, name, type, priority, status, convergence, parent_id)
-         VALUES ('child-1', 'Child', 'task', 2, 'pending', 1.0, ?)`,
+        `INSERT INTO tasks (hash_id, name, type, priority, convergence, parent_id)
+         VALUES ('child-1', 'Child', 'task', 2, 1.0, ?)`,
         parentId
       );
 
@@ -148,8 +148,8 @@ describe("db/schema", () => {
 
     test("should auto-generate created_at and updated_at", () => {
       db.run(
-        `INSERT INTO tasks (hash_id, name, type, priority, status, convergence)
-         VALUES ('test-7', 'Test', 'task', 3, 'pending', 1.0)`
+        `INSERT INTO tasks (hash_id, name, type, priority, convergence)
+         VALUES ('test-7', 'Test', 'task', 3, 1.0)`
       );
 
       const task = db.query("SELECT * FROM tasks WHERE hash_id = 'test-7'").get() as any;
@@ -159,8 +159,8 @@ describe("db/schema", () => {
 
     test("should update updated_at on row update", async () => {
       db.run(
-        `INSERT INTO tasks (hash_id, name, type, priority, status, convergence)
-         VALUES ('test-8', 'Test', 'task', 3, 'pending', 1.0)`
+        `INSERT INTO tasks (hash_id, name, type, priority, convergence)
+         VALUES ('test-8', 'Test', 'task', 3, 1.0)`
       );
 
       const before = db.query("SELECT * FROM tasks WHERE hash_id = 'test-8'").get() as any;

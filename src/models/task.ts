@@ -9,11 +9,10 @@ export enum TaskType {
 
 /**
  * Task statuses
+ * Only BLOCKED and CANCELLED are explicit statuses.
+ * All other states (pending, converged, not_converged) are derived from convergence value.
  */
 export enum TaskStatus {
-  PENDING = "pending",
-  IN_PROGRESS = "in_progress",
-  COMPLETED = "completed",
   BLOCKED = "blocked",
   CANCELLED = "cancelled",
 }
@@ -41,7 +40,7 @@ export interface Task {
   name: string;
   type: TaskType;
   priority: TaskPriority;
-  status: TaskStatus;
+  status: TaskStatus | null;
   convergence: number;
   description?: string;
   parent_id?: number;

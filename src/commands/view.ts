@@ -1,7 +1,7 @@
 import Database from "bun:sqlite";
 import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { getTaskById, getChildTasks } from "../db/queries.js";
-import { formatTaskDetails, info, parseTaskId, isConvergenceConverged } from "../utils/format.js";
+import { formatTaskDetails, info, parseTaskId, formatTaskStatus } from "../utils/format.js";
 
 export async function view(hashId: string, cwd?: string): Promise<void> {
   const dbPath = cwd ? getDbPath(cwd) : undefined;
@@ -25,7 +25,8 @@ export async function view(hashId: string, cwd?: string): Promise<void> {
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
         if (child) {
-          console.log(`  ${i + 1}. ${child.hash_id}: ${child.name} (${child.status})`);
+          const derivedStatus = formatTaskStatus(child.status, child.convergence);
+          console.log(`  ${i + 1}. ${child.hash_id}: ${child.name} - ${child.convergence.toFixed(2)} (${derivedStatus})`);
         }
       }
     }

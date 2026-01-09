@@ -6,8 +6,7 @@ This project uses \`np\` CLI for task tracking. When working on this project:
 
 **Workflow Shortcuts:**
 - \`np next\` - Show what to work on next
-- \`np work <id>\` - View task + mark as in_progress
-- \`np start <id>\` - Mark as in_progress
+- \`np work <id>\` - View task details
 - \`np block <id>\` - Mark as blocked
 
 **Search & Navigate:**
@@ -17,7 +16,7 @@ This project uses \`np\` CLI for task tracking. When working on this project:
 
 **List Tasks:**
 - \`np ls\` - List all tasks
-- \`np ls --wip\` - Show only in_progress tasks
+- \`np ls --wip\` - Show work-in-progress tasks (convergence < 1.0 && > 0.01)
 - \`np ls --focus\` - Show high-priority + unblocked tasks
 - \`np ls --type <TYPE>\` - Filter by type
 
@@ -27,50 +26,66 @@ This project uses \`np\` CLI for task tracking. When working on this project:
 - Auto-priority: "urgent" → 1, "important" → 2
 
 **Full Commands:**
-- \`np update --status <STATUS> <id>\` - Update status
-- \`np update --convergence <VALUE> <id>\` - Update convergence (use 0.005 to auto-complete)
-- \`np done <id>\` - Just updates status to completed
+- \`np update --status <STATUS> <id>\` - Update status (blocked, cancelled)
+- \`np update --convergence <VALUE> <id>\` - Update convergence
 - \`np del <id>\` - Delete task
 
-## What is Convergence?
+## Convergence: A Clear Mental Model
 
-Convergence measures **how much work remains** on a task. It's a value from 0.0 to 1.0:
+**Convergence = Work Remaining (0.01 to 1.0)**
 
-- **1.0** = Not started (100% work remaining)
-- **0.5** = Halfway done (50% remaining)
-- **0.0** = Completed (0% remaining)
+Think of convergence as "how much work is left," NOT "how much progress has been made."
 
-**For AI agents:** Think of it as "effort remaining" rather than "progress made".
+- **1.0** = 100% work remaining (not started)
+- **0.5** = 50% work remaining (halfway done)
+- **0.01** = ~1% work remaining (complete)
 
-### Values Reference
+**The Rule:** Only convergence ≤ 0.01 means "complete." Any value > 0.01 means "work remains."
 
-| Value | Meaning |
-|-------|--------|
-| 1.0 | Not started |
-| 0.7 | Just started |
-| 0.5 | Halfway done |
-| 0.3 | Almost done |
-| <= 0.01 | Ready to complete |
+### Canonical Examples
 
-### How to Complete a Task
+| Convergence | Work Remaining | How to Describe It |
+|-------------|----------------|-------------------|
+| 0.9 | 90% | "0.9 convergence (90% work remaining)" |
+| 0.5 | 50% | "0.5 convergence (50% work remaining)" |
+| 0.11 | 11% | "0.11 convergence (11% work remaining)" |
+| 0.05 | 5% | "0.05 convergence (5% work remaining)" |
+| 0.01 | ~1% | "Complete" or "Converged" |
 
-When you're done with a task, run:
+**Pattern:** Always describe convergence as "X = Y% work remaining." This keeps the mental model clear.
 
-\`\`\`bash
-np update <id> --convergence 0.005
-\`\`\`
+### Common Mistake Pattern
 
-This sets convergence within the 0.01 threshold, which:
-1. Snaps the value to 0.0
-2. Automatically marks the task as completed
+When you see a low convergence value like 0.11, your intuition might say "that's close to zero, so it's basically done." **This is wrong.**
 
-### Auto-Completion
+**Correct interpretation:**
+- 0.11 means "11% of the work remains"
+- 11% is not zero—it's a meaningful amount of work
+- Only 0.01 or lower means "done"
 
-When convergence reaches <= 0.01:
-- The value is snapped to 0
-- Status is automatically set to "completed"
+**Before describing a task as complete, ask yourself:** Is the convergence ≤ 0.01? If not, the task is not complete.
 
-This prevents floating-point issues from blocking completion.
+### Completion Checklist
+
+Before setting convergence to 0.01, verify:
+
+- [ ] Code written and compiles/runs without errors
+- [ ] Tested and confirmed working
+- [ ] All related tests pass
+- [ ] No obvious bugs or TODOs remaining
+
+If ANY checkbox is "NO," do not set convergence to 0.01.
+
+## Task Status
+
+Tasks have two explicit statuses:
+- **blocked** - Task cannot proceed (e.g., waiting on dependencies)
+- **cancelled** - Task is no longer relevant
+
+All other states are derived from convergence:
+- **converged** - convergence ≤ 0.01 (complete)
+- **not converged** - 0.01 < convergence < 1.0 (work in progress)
+- **pending** - convergence === 1.0 (not started)
 
 ## Task Types
 
@@ -90,9 +105,9 @@ This prevents floating-point issues from blocking completion.
 
 1. Ask user: "What should I work on?"
 2. User says: "Implement task {{prefix}}-abc123"
-3. Run: \`np work {{prefix}}-abc123\` → Shows details, marks as in_progress
+3. Run: \`np work {{prefix}}-abc123\` → Shows task details
 4. Work on implementation
-5. When done: \`np update {{prefix}}-abc123 --convergence 0.005\` → Auto-completes the task (threshold <= 0.01)
+5. When done: \`np update {{prefix}}-abc123 --convergence 0.01\` → Mark as converged
 
 ## When to Block a Task
 

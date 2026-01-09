@@ -9,24 +9,24 @@ export function formatTaskType(type: TaskType): string {
 
 /**
  * Format task status as display string
+ * Status is derived from actual status and convergence value
  */
-export function formatTaskStatus(status: TaskStatus): string {
-  const statusMap: Record<TaskStatus, string> = {
-    pending: "pending",
-    in_progress: "in_progress",
-    completed: "completed",
-    blocked: "blocked",
-    cancelled: "cancelled",
-  };
-  return statusMap[status];
+export function formatTaskStatus(status: TaskStatus | null, convergence: number): string {
+  // Explicit statuses take precedence
+  if (status === "blocked") return "blocked";
+  if (status === "cancelled") return "cancelled";
+
+  // Derive from convergence
+  if (convergence <= 0.01) return "converged";
+  if (convergence === 1.0) return "pending";
+  return "not converged";
 }
 
 /**
- * Format convergence as progress bar
+ * Format convergence as raw value string
  */
 export function formatConvergence(convergence: number): string {
-  const percentage = Math.round((1 - convergence) * 100);
-  return `${percentage}%`;
+  return convergence.toFixed(2);
 }
 
 /**
@@ -45,12 +45,10 @@ export function formatTask(task: Task, showHashId: boolean = true, suffix?: numb
   const prefix = showHashId ? `${hashId}: ` : "";
   const typeStr = `[${formatTaskType(task.type)}]`;
   const priorityStr = `(P${task.priority})`;
-  const statusStr = `[${formatTaskStatus(task.status)}]`;
-  const convStr = formatConvergence(task.convergence);
-  const converged = isConvergenceConverged(task.convergence);
-  const readyIndicator = converged && task.status !== "completed" ? " *" : "";
+  const derivedStatus = formatTaskStatus(task.status, task.convergence);
 
-  return `${prefix}${typeStr} ${task.name} ${priorityStr} ${statusStr} ${convStr}${readyIndicator}`;
+  // Format: [hash_id]: [TYPE] name (P#) - 0.75 (not converged)
+  return `${prefix}${typeStr} ${task.name} ${priorityStr} - ${formatConvergence(task.convergence)} (${derivedStatus})`;
 }
 
 /**
@@ -115,13 +113,12 @@ function formatTaskNodeRecursive(node: TaskNode, indent: string): string {
  */
 export function formatTaskDetails(task: Task): string {
   const lines: string[] = [];
-  const converged = isConvergenceConverged(task.convergence);
 
   lines.push(`=== ${task.hash_id}: ${task.name} ===`);
   lines.push(`Type: ${formatTaskType(task.type)}`);
   lines.push(`Priority: ${task.priority}`);
-  lines.push(`Status: ${formatTaskStatus(task.status)}`);
-  lines.push(`Convergence: ${convergenceToString(task.convergence)}${converged ? " (ready to complete)" : ""}`);
+  lines.push(`Status: ${formatTaskStatus(task.status, task.convergence)}`);
+  lines.push(`Convergence: ${formatConvergence(task.convergence)}`);
 
   if (task.parent_id) {
     lines.push(`Parent ID: ${task.parent_id}`);

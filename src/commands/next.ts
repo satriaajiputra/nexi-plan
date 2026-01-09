@@ -9,37 +9,25 @@ export async function next(cwd?: string): Promise<void> {
   const db = getDatabase(dbPath);
 
   try {
-    // Get high priority tasks that are not blocked, cancelled, or completed
+    // Get tasks that are not blocked or cancelled
     const tasks = getTasksByFilter(db, {
-      excludeStatus: [TaskStatus.BLOCKED, TaskStatus.CANCELLED, TaskStatus.COMPLETED],
+      excludeStatus: [TaskStatus.BLOCKED, TaskStatus.CANCELLED],
     });
 
-    // Filter for priority 1-2 tasks that are pending or in_progress
+    // Filter for priority 1-2 tasks that are not converged (convergence > 0.01)
     const candidates = tasks.filter(
-      (t) => t.priority <= 2 && (t.status === TaskStatus.PENDING || t.status === TaskStatus.IN_PROGRESS)
+      (t) => t.priority <= 2 && t.convergence > 0.01
     );
 
     if (candidates.length === 0) {
-      // Show the highest priority pending task
-      const pendingTasks = tasks.filter((t) => t.status === TaskStatus.PENDING);
-      if (pendingTasks.length > 0) {
-        const topTask = pendingTasks.sort((a, b) => a.priority - b.priority)[0];
-        if (topTask) {
-          console.log(`→ ${formatTask(topTask)}`);
-        }
-      } else {
-        info("No pending tasks found. All tasks are completed, blocked, or cancelled.");
-      }
+      info("No pending tasks found. All tasks are converged, blocked, or cancelled.");
       return;
     }
 
-    // Show the top candidate
+    // Sort by convergence (lowest first = most done), then priority, then date
     const topTask = candidates.sort((a, b) => {
-      // Prefer in_progress over pending for same priority
-      if (a.priority === b.priority) {
-        if (a.status === TaskStatus.IN_PROGRESS && b.status !== TaskStatus.IN_PROGRESS) return -1;
-        if (b.status === TaskStatus.IN_PROGRESS && a.status !== TaskStatus.IN_PROGRESS) return 1;
-      }
+      // Prefer tasks closer to convergence
+      if (a.convergence !== b.convergence) return a.convergence - b.convergence;
       if (a.priority !== b.priority) return a.priority - b.priority;
       return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     })[0];

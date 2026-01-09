@@ -38,8 +38,6 @@ export function calculateParentConvergence(db: Database, parentId: number): numb
 export function propagateConvergence(db: Database, taskId: number): void {
   const task = getTaskByInternalId(db, taskId);
   if (!task || !task.parent_id) {
-    // Also check auto-complete for the leaf task itself
-    autoCompleteIfConverged(db, taskId);
     return;
   }
 
@@ -55,9 +53,6 @@ export function propagateConvergence(db: Database, taskId: number): void {
   // Update parent's convergence using hash_id
   updateTask(db, parentTask.hash_id, { convergence: newConvergence });
 
-  // Check auto-complete for parent after convergence update
-  autoCompleteIfConverged(db, parentTask.id);
-
   // Recursively propagate up
   propagateConvergence(db, task.parent_id);
 }
@@ -69,25 +64,6 @@ export function updateTaskConvergence(db: Database, hashId: string, convergence:
   const task = updateTask(db, hashId, { convergence });
   if (task) {
     propagateConvergence(db, task.id);
-    autoCompleteIfConverged(db, task.id);
-  }
-}
-
-/**
- * Automatically mark task as completed if convergence has reached threshold
- */
-export function autoCompleteIfConverged(db: Database, taskId: number): void {
-  const task = getTaskByInternalId(db, taskId);
-  if (!task) return;
-
-  // Skip if already completed or cancelled
-  if (task.status === TaskStatus.COMPLETED || task.status === TaskStatus.CANCELLED) {
-    return;
-  }
-
-  // Check if converged (within epsilon threshold)
-  if (isConverged(task.convergence)) {
-    updateTask(db, task.hash_id, { status: TaskStatus.COMPLETED });
   }
 }
 

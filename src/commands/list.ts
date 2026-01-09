@@ -20,7 +20,8 @@ export async function list(options: ListOptions = {}): Promise<void> {
 
     // Apply filters
     if (options.wip) {
-      tasks = tasks.filter((t) => t.status === "in_progress");
+      // Work-in-progress: tasks that have been started but not converged
+      tasks = tasks.filter((t) => t.convergence < 1.0 && t.convergence > 0.01);
     }
 
     if (options.focus) {

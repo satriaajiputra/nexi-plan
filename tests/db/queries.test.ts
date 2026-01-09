@@ -48,7 +48,7 @@ describe("db/queries", () => {
 			expect(task.name).toBe("Test Task");
 			expect(task.type).toBe(TaskType.TASK);
 			expect(task.priority).toBe(3);
-			expect(task.status).toBe(TaskStatus.PENDING);
+			expect(task.status).toBeNull();
 			expect(task.convergence).toBe(1.0);
 			expect(task.description).toBe("A test description");
 		});
@@ -129,10 +129,10 @@ describe("db/queries", () => {
 	describe("getTasksByFilter", () => {
 		test("should filter by status", () => {
 			createStatusTestTasks(db);
-			const pending = getTasksByFilter(db, { status: TaskStatus.PENDING });
+			const blocked = getTasksByFilter(db, { status: TaskStatus.BLOCKED });
 
-			expect(pending.length).toBeGreaterThan(0);
-			expect(pending.every((t) => t.status === "pending")).toBe(true);
+			expect(blocked.length).toBeGreaterThan(0);
+			expect(blocked.every((t) => t.status === "blocked")).toBe(true);
 		});
 
 		test("should filter by type", () => {
@@ -163,19 +163,12 @@ describe("db/queries", () => {
 		test("should exclude multiple statuses", () => {
 			createStatusTestTasks(db);
 			const available = getTasksByFilter(db, {
-				excludeStatus: [
-					TaskStatus.COMPLETED,
-					TaskStatus.BLOCKED,
-					TaskStatus.CANCELLED,
-				],
+				excludeStatus: [TaskStatus.BLOCKED, TaskStatus.CANCELLED],
 			});
 
 			expect(
 				available.every(
-					(t) =>
-						t.status !== "completed" &&
-						t.status !== "blocked" &&
-						t.status !== "cancelled",
+					(t) => t.status !== "blocked" && t.status !== "cancelled",
 				),
 			).toBe(true);
 		});
@@ -201,17 +194,16 @@ describe("db/queries", () => {
 	});
 
 	describe("updateTask", () => {
-		test("should update status", () => {
+		test("should update status to blocked", () => {
 			const task = createTestTask(db, {
 				name: "Test",
-				status: TaskStatus.PENDING,
 			});
 
 			const updated = updateTask(db, task.hash_id, {
-				status: TaskStatus.COMPLETED,
+				status: TaskStatus.BLOCKED,
 			});
 
-			expect(updated!.status).toBe(TaskStatus.COMPLETED);
+			expect(updated!.status).toBe(TaskStatus.BLOCKED);
 		});
 
 		test("should update convergence", () => {
@@ -235,18 +227,17 @@ describe("db/queries", () => {
 		test("should update multiple fields at once", () => {
 			const task = createTestTask(db, {
 				name: "Test",
-				status: TaskStatus.PENDING,
 			});
 
 			const updated = updateTask(db, task.hash_id, {
-				status: TaskStatus.COMPLETED,
+				status: TaskStatus.BLOCKED,
 				convergence: 0.0,
-				description: "Done",
+				description: "Blocked",
 			});
 
-			expect(updated!.status).toBe(TaskStatus.COMPLETED);
+			expect(updated!.status).toBe(TaskStatus.BLOCKED);
 			expect(updated!.convergence).toBe(0.0);
-			expect(updated!.description).toBe("Done");
+			expect(updated!.description).toBe("Blocked");
 		});
 
 		test("should return original task if no updates", () => {
@@ -259,7 +250,7 @@ describe("db/queries", () => {
 
 		test("should return null for non-existent task", () => {
 			const result = updateTask(db, "nonexistent", {
-				status: TaskStatus.COMPLETED,
+				status: TaskStatus.BLOCKED,
 			});
 			expect(result).toBeNull();
 		});

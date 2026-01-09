@@ -2,7 +2,7 @@ import Database from "bun:sqlite";
 import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
 import { insertTask, getTaskById, getChildTasks } from "../db/queries.js";
 import { generateTaskId } from "../services/id.js";
-import { propagateConvergence, autoCompleteIfConverged } from "../services/convergence.js";
+import { propagateConvergence } from "../services/convergence.js";
 import { detectFromName, cleanTaskName } from "../utils/detect.js";
 import { success, error } from "../utils/format.js";
 import { readDescription } from "../utils/fs.js";
@@ -69,9 +69,6 @@ export async function add(options: AddOptions): Promise<void> {
     // Propagate convergence to parent
     if (parentId) {
       propagateConvergence(db, parentId);
-    } else {
-      // Check auto-complete for the new task itself (standalone tasks)
-      autoCompleteIfConverged(db, task.id);
     }
 
     // Calculate display ID with suffix if it has a parent

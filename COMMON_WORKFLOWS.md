@@ -41,7 +41,7 @@ np add -n "feat: Export data as CSV" -d "Add CSV export functionality"
 **You check:**
 ```bash
 np ls
-→ mp-abc123: feat: Export data as CSV (pending)
+→ mp-abc123: [TASK] feat: Export data as CSV (P3) - 1.00 (pending)
 ```
 
 ---
@@ -65,7 +65,7 @@ np add -n "fix: Login button not working on mobile" -d "Button tap event not fir
 **You check:**
 ```bash
 np ls --type bug
-→ mp-xyz789: fix: Login button not working on mobile (pending)
+→ mp-xyz789: [BUG] fix: Login button not working on mobile (P3) - 1.00 (pending)
 ```
 
 ---
@@ -77,7 +77,7 @@ You come back to continue working with your AI.
 **AI does at session start:**
 ```bash
 np next
-→ mp-abc123: feat: Export data as CSV (priority 2, pending)
+→ mp-abc123: [TASK] feat: Export data as CSV (P2) - 0.75 (not converged)
 ```
 
 **Then:**
@@ -85,7 +85,7 @@ np next
 np work mp-abc123
 ```
 
-**What you see:** The AI claims the task and starts working.
+**What you see:** The AI views the task details and starts working.
 
 **You can also check yourself:**
 ```bash
@@ -134,19 +134,19 @@ np add -n "Payment UI components" --deps mp-abc123
 **You check progress:**
 ```bash
 np ls
-→ epic: Implement payment system (0.67)
-│   ├── Database schema for payments (0.0) ✓
-│   ├── API endpoints for payments (0.0) ✓
-│   ├── Stripe integration (0.5) ██████░░░░
-│   ├── Webhook handler (1.0) pending
-│   └── Payment UI components (1.0) pending
+→ [EPIC] epic: Implement payment system (P1) - 0.67 (not converged)
+    ├── [1. mp-def456]: [TASK] Database schema for payments (P2) - 0.01 (converged)
+    ├── [2. mp-ghi789]: [TASK] API endpoints for payments (P2) - 0.01 (converged)
+    ├── [3. mp-jkl012]: [TASK] Stripe integration (P2) - 0.50 (not converged)
+    ├── [4. mp-mno345]: [TASK] Webhook handler (P2) - 1.00 (pending)
+    └── [5. mp-pqr678]: [TASK] Payment UI components (P2) - 1.00 (pending)
 ```
 
 **What convergence means:**
 - `0.67` = 67% of work remaining (parent auto-calculated)
-- `0.0` = completed
-- `1.0` = not started
-- `0.5` = halfway done
+- `0.01` = converged (completed and tested)
+- `1.00` = not started
+- `0.50` = halfway done
 
 ---
 
@@ -157,7 +157,7 @@ The AI hits a blocker and needs your help.
 **You notice:**
 ```bash
 np ls --focus
-→ mp-abc123: feat: API integration (blocked) ████████░░
+→ mp-abc123: [TASK] feat: API integration (P2) - 0.30 (blocked)
 ```
 
 **You ask:** "Why is this blocked?"
@@ -167,13 +167,13 @@ np ls --focus
 
 **You provide the credentials, then:**
 ```bash
-np start mp-abc123  # AI runs this to resume
+np update mp-abc123 --convergence 0.3  # AI resumes work
 ```
 
 **What you see:**
 ```bash
 np ls --focus
-→ mp-abc123: feat: API integration (in_progress)
+→ mp-abc123: [TASK] feat: API integration (P2) - 0.30 (not converged)
 ```
 
 ---
@@ -199,16 +199,14 @@ np update mp-abc123 --convergence 0.2  # Almost finished
 
 **AI completes:**
 ```bash
-np update mp-abc123 --convergence 0.005  # Within 1% threshold → auto-completes
+np update mp-abc123 --convergence 0.01  # Completed and tested
 ```
-
-**Auto-complete:** When convergence reaches <= 0.01, the task is automatically marked as completed.
 
 **You check:**
 ```bash
 np view mp-abc123
-→ Status: completed
-→ Convergence: 0.0
+→ Status: converged
+→ Convergence: 0.01
 ```
 
 ---
@@ -220,8 +218,8 @@ You can't remember the exact task name.
 **You do:**
 ```bash
 np find login
-→ mp-abc123: feat: User login functionality
-→ mp-xyz789: fix: Login redirect loop
+→ mp-abc123: [TASK] feat: User login functionality
+→ mp-xyz789: [BUG] fix: Login redirect loop
 ```
 
 **Or:**
@@ -241,18 +239,18 @@ Quick status check during conversation.
 **AI runs:**
 ```bash
 np ls --focus
-→ mp-abc123: feat: Payment system (in_progress) 0.67
-│   ├── Database schema (0.0) ✓
-│   ├── API endpoints (0.0) ✓
-│   ├── Stripe integration (0.5) ██████░░░░
-│   └── Webhook handler (1.0) pending
-→
-→ mp-def456: fix: Login mobile (blocked) ████████░░
+→ [EPIC] epic: Payment system (P1) - 0.67 (not converged)
+    ├── [1. mp-def456]: [TASK] Database schema (P2) - 0.01 (converged)
+    ├── [2. mp-ghi789]: [TASK] API endpoints (P2) - 0.01 (converged)
+    ├── [3. mp-jkl012]: [TASK] Stripe integration (P2) - 0.50 (not converged)
+    └── [4. mp-mno345]: [TASK] Webhook handler (P2) - 1.00 (pending)
+
+→ [BUG] fix: Login mobile (P1) - 0.20 (blocked)
 ```
 
 **You see:**
-- One task in progress
-- One task blocked (needs your help)
+- One epic in progress
+- One bug blocked (needs your help)
 
 ---
 
@@ -278,15 +276,15 @@ git log --grep="mp-abc123"
 
 ---
 
-## Scenario 11: Cleaning Up Completed Tasks
+## Scenario 11: Cleaning Up Converged Tasks
 
-Archive old completed tasks to keep the list focused.
+Archive old converged tasks to keep the list focused.
 
 **You review:**
 ```bash
-np ls --type completed
-→ mp-old123: Some old task (completed)
-→ mp-old456: Another old task (completed)
+np ls | grep "converged"
+→ mp-old123: [TASK] Some old task (P5) - 0.01 (converged)
+→ mp-old456: [TASK] Another old task (P5) - 0.01 (converged)
 ```
 
 **AI deletes (with --force to not cascade):**
@@ -315,7 +313,7 @@ np update mp-q2123 -p 2  # Set priority
 **You check:**
 ```bash
 np ls --focus
-→ mp-q2123: epic: Q2 Features (pending) 1.0
+→ [EPIC] epic: Q2 Features (P2) - 1.00 (pending)
 ```
 
 ---
@@ -353,9 +351,9 @@ np ls --focus
 | 0.7 | Just started |
 | 0.5 | Halfway |
 | 0.3 | Almost done |
-| <= 0.01 | Completed (auto-complete triggered) |
+| 0.01 | Converged (completed and tested) |
 
-**Note:** Values within 0.01 (1%) of 0 are snapped to 0 and the task is automatically marked as completed.
+**Important:** Only set convergence to 0.01 when the task is actually complete, tested, and verified. Never set it to 0.0 or below 0.01.
 
 ---
 
@@ -402,13 +400,13 @@ You notice the AI is working on something unexpected.
 **You check:**
 ```bash
 np ls --wip
-→ mp-abc123: feat: Export data as CSV (in_progress)
+→ mp-abc123: [TASK] feat: Export data as CSV (P2) - 0.50 (not converged)
 ```
 
 **But you wanted:**
 ```bash
 # You wanted it to work on:
-→ mp-xyz789: fix: Login bug (pending)
+→ mp-xyz789: [BUG] fix: Login bug (P1) - 1.00 (pending)
 ```
 
 **You redirect:**
@@ -429,7 +427,7 @@ AI created a task with a typo or wrong description.
 **You notice:**
 ```bash
 np ls
-→ mp-abc123: feat: Exprot data as CSV (pending)  # Typo!
+→ mp-abc123: [TASK] feat: Exprot data as CSV (P3) - 1.00 (pending)  # Typo!
 ```
 
 **AI fixes it:**
@@ -450,8 +448,8 @@ AI auto-detected incorrectly, or priorities have changed.
 **You see:**
 ```bash
 np ls
-→ mp-abc123: feat: Minor UI tweak (priority 2)  # Not actually important
-→ mp-xyz789: epic: Core platform rewrite (priority 3)  # Should be priority 1!
+→ mp-abc123: [TASK] feat: Minor UI tweak (P2) - 1.00 (pending)  # Not actually important
+→ mp-xyz789: [EPIC] epic: Core platform rewrite (P3) - 1.00 (pending)  # Should be priority 1!
 ```
 
 **AI adjusts:**
@@ -474,8 +472,8 @@ Same task exists twice.
 **You find:**
 ```bash
 np find "export csv"
-→ mp-abc123: feat: Export CSV (completed)
-→ mp-xyz789: feat: Export to CSV (pending)  # Duplicate!
+→ mp-abc123: [TASK] feat: Export CSV (P3) - 0.01 (converged)
+→ mp-xyz789: [TASK] feat: Export to CSV (P3) - 1.00 (pending)  # Duplicate!
 ```
 
 **AI removes duplicate:**
@@ -492,9 +490,9 @@ AI created a subtask under the wrong epic.
 **Tree shows:**
 ```bash
 np ls
-→ epic: Payment system (0.50)
-│   ├── Database schema (0.0) ✓
-│   └── feat: Export reports (0.5) ██████░░░░  # Wrong parent!
+→ [EPIC] epic: Payment system (P1) - 0.50 (not converged)
+    ├── [1. mp-def456]: [TASK] Database schema (P2) - 0.01 (converged)
+    └── [2. mp-reportid]: [TASK] feat: Export reports (P2) - 0.50 (not converged)  # Wrong parent!
 ```
 
 **Fix (delete and recreate):**
@@ -512,7 +510,7 @@ You fixed something externally, but AI is still blocked.
 **You notice:**
 ```bash
 np ls --focus
-→ mp-abc123: feat: API integration (blocked)
+→ mp-abc123: [TASK] feat: API integration (P2) - 0.30 (blocked)
 ```
 
 **You say:**
@@ -520,8 +518,8 @@ np ls --focus
 
 **AI resumes:**
 ```bash
-np start mp-abc123
 np view mp-abc123  # Verify environment variables
+np update mp-abc123 --convergence 0.3  # Continue work
 ```
 
 ---
@@ -533,14 +531,14 @@ Parent convergence doesn't match reality.
 **You see:**
 ```bash
 np ls
-→ epic: Payment system (0.3)  # Says 70% done
-│   ├── Database schema (0.0) ✓
-│   ├── API endpoints (0.0) ✓
-│   ├── Stripe integration (0.0) ✓  # All subtasks done!
-│   └── Webhook handler (1.0) pending
+→ [EPIC] epic: Payment system (P1) - 0.30 (not converged)  # Says 70% done
+    ├── [1. mp-def456]: [TASK] Database schema (P2) - 0.01 (converged)
+    ├── [2. mp-ghi789]: [TASK] API endpoints (P2) - 0.01 (converged)
+    ├── [3. mp-jkl012]: [TASK] Stripe integration (P2) - 0.01 (converged)  # All subtasks done!
+    └── [4. mp-mno345]: [TASK] Webhook handler (P2) - 1.00 (pending)
 ```
 
-**Actually:** Parent should be `0.75` (3/4 done), not `0.3`.
+**Actually:** Parent should be `0.75` (3/4 done), not `0.30`.
 
 **AI checks and fixes:**
 ```bash
@@ -585,9 +583,9 @@ Everything seems to be priority 1 or 2.
 **You notice:**
 ```bash
 np ls --focus
-→ mp-abc123: feat: Nice-to-have feature (priority 1)
-→ mp-xyz789: fix: Typo in footer (priority 1)
-→ mp-def456: epic: Future idea (priority 1)
+→ mp-abc123: [TASK] feat: Nice-to-have feature (P1) - 1.00 (pending)
+→ mp-xyz789: [BUG] fix: Typo in footer (P1) - 1.00 (pending)
+→ mp-def456: [EPIC] epic: Future idea (P1) - 1.00 (pending)
 ```
 
 **You reset priorities:**
@@ -605,14 +603,14 @@ np ls --focus
 
 ---
 
-### Scenario 22: Too Many Completed Subtasks
+### Scenario 22: Too Many Converged Subtasks
 
-An epic has 20+ completed subtasks, cluttering the view.
+An epic has 20+ converged subtasks, cluttering the view.
 
 **AI cleans up:**
 ```bash
-# Review completed subtasks
-np ls --type completed | grep "Payment system"
+# Review converged subtasks
+np view <epic-id>  # Check which subtasks are converged
 
 # Delete old ones (with --force to not affect parent)
 np del mp-old1 --force
@@ -620,7 +618,7 @@ np del mp-old2 --force
 # ... repeat for old subtasks
 ```
 
-**Note:** Completed subtasks contribute to parent convergence. Deleting them may shift the parent's convergence.
+**Note:** Converged subtasks contribute to parent convergence. Deleting them may shift the parent's convergence.
 
 ---
 
@@ -631,7 +629,7 @@ A task has been blocked for days (waiting on external team).
 **You notice:**
 ```bash
 np ls --focus
-→ mp-abc123: feat: Third-party integration (blocked)  # Blocked for 5 days
+→ mp-abc123: [TASK] feat: Third-party integration (P2) - 0.30 (blocked)  # Blocked for 5 days
 ```
 
 **Options:**
@@ -670,18 +668,15 @@ Retrospective or progress review.
 
 **AI runs:**
 ```bash
-# List all completed tasks
-np ls --type completed
-
-# If you have timestamps, filter by date
-# (SQLite supports date queries)
+# List converged tasks
+np ls | grep "converged"
 ```
 
 **You see:**
 ```
-→ mp-abc123: feat: User login (completed)
-→ mp-xyz789: fix: Password reset (completed)
-→ mp-def456: epic: Q1 Planning (completed)
+→ mp-abc123: [TASK] feat: User login (P3) - 0.01 (converged)
+→ mp-xyz789: [BUG] fix: Password reset (P3) - 0.01 (converged)
+→ mp-def456: [EPIC] epic: Q1 Planning (P1) - 0.01 (converged)
 ```
 
 ---
@@ -693,13 +688,13 @@ You're returning after days away.
 **AI does at session start:**
 ```bash
 np ls --wip  # What was in progress?
-→ mp-abc123: feat: Payment integration (in_progress)
+→ mp-abc123: [TASK] feat: Payment integration (P2) - 0.50 (not converged)
 
 np view mp-abc123  # What was I doing?
 → "Implementing Stripe webhooks"
 
 np ls --focus  # What's blocked?
-→ mp-xyz789: feat: API keys (blocked)
+→ mp-xyz789: [TASK] feat: API keys (P2) - 0.20 (blocked)
 ```
 
 **Then:**
@@ -716,7 +711,7 @@ AI auto-detected incorrectly.
 **You see:**
 ```bash
 np ls
-→ mp-abc123: fix: Add dark mode  # Auto-detected as bug, should be task
+→ mp-abc123: [BUG] fix: Add dark mode (P3) - 1.00 (pending)  # Auto-detected as bug, should be task
 ```
 
 **AI fixes:**
@@ -772,7 +767,7 @@ feat: Update user profile API
 **Find the task:**
 ```bash
 np find "profile"
-→ mp-abc123: feat: User profile API
+→ mp-abc123: [TASK] feat: User profile API (P3) - 0.01 (converged)
 
 # Verify by checking git log
 git log --oneline | grep "mp-abc123"
@@ -796,29 +791,29 @@ np add -n "Frontend integration" --deps mp-api2
 
 **AI works sequentially:**
 1. Work on Database migration
-2. `np update <id> --convergence 0.005` to complete
+2. `np update <id> --convergence 0.01` to complete
 3. Work on API endpoints
 4. etc.
 
 **Human checks:**
 ```bash
 np ls
-→ epic: API v2 (0.67)
-│   ├── Database migration (0.0) ✓
-│   ├── API endpoints (0.5) ██████░░░░
-│   └── Frontend integration (1.0) pending
+→ [EPIC] epic: API v2 (P1) - 0.67 (not converged)
+    ├── [1. mp-def456]: [TASK] Database migration (P2) - 0.01 (converged)
+    ├── [2. mp-ghi789]: [TASK] API endpoints (P2) - 0.50 (not converged)
+    └── [3. mp-jkl012]: [TASK] Frontend integration (P2) - 1.00 (pending)
 ```
 
 ---
 
 ### Scenario 31: Very Small Task Completed Instantly
 
-Task was so small convergence jumped 1.0 → 0.0.
+Task was so small convergence jumped 1.0 → 0.01.
 
 **You notice:**
 ```bash
-np ls --type completed
-→ mp-abc123: fix: Typo in error message (completed)
+np ls | grep "converged"
+→ mp-abc123: [BUG] fix: Typo in error message (P3) - 0.01 (converged)
 ```
 
 **This is fine!** Small tasks complete instantly. The parent epic will still reflect accurate progress.
@@ -832,12 +827,12 @@ An epic has many subtasks, so completion seems slow.
 **You see:**
 ```bash
 np ls
-→ epic: Complete platform rewrite (0.95)  # 1 year of work!
-│   ├── 50 subtasks completed
-│   └── 3 subtasks remaining
+→ [EPIC] epic: Complete platform rewrite (P1) - 0.95 (not converged)  # 1 year of work!
+    ├── 50 subtasks converged
+    └── 3 subtasks pending
 ```
 
-**This is correct!** Convergence is accurate. the remaining The parent reflects work.
+**This is correct!** Convergence is accurate. The parent reflects the remaining work.
 
 ---
 
@@ -860,11 +855,10 @@ Task B depends on Task A.
 **You see:**
 ```bash
 np ls
-→ mp-abc123: feat: User dashboard (in_progress) 0.5
-│   └── User profile component (1.0) pending
+→ mp-abc123: [TASK] feat: User dashboard (P2) - 0.50 (not converged)
+    └── [1. mp-def456]: [TASK] User profile component (P2) - 1.00 (pending)
 
-→ mp-xyz789: feat: Admin panel (pending)
-    └── Requires: User dashboard (blocked)
+→ mp-xyz789: [TASK] feat: Admin panel (P2) - 1.00 (pending)
 ```
 
 **AI handles:**
@@ -874,27 +868,26 @@ np block mp-xyz789 -d "Blocked by: mp-abc123 (User dashboard)"
 
 ---
 
-### Scenario 35: Convergence at 0, Status Still In Progress
+### Scenario 35: Updating Status
 
-When does this happen: AI uses `np update <id> --convergence 0` instead of `np update <id> --convergence 0.005` to complete a task. The value 0 doesn't trigger auto-complete (only <= 0.01 does), so convergence becomes 0 but status stays in_progress.
+Tasks have two explicit statuses that override convergence-based status:
 
-**You notice:**
+**Blocked:**
 ```bash
-np ls
-→ mp-abc123: feat: Export CSV (in_progress) 0.0 *
+np update <id> --status blocked
+# or
+np block <id>
 ```
 
-**What the `*` means:** Task is within threshold (convergence <= 0.01) and ready to complete.
-
-**AI should have done:**
+**Cancelled:**
 ```bash
-np update <id> --convergence 0.005  # This triggers auto-complete
+np update <id> --status cancelled
 ```
 
-**To fix this:**
-```bash
-np done <id>  # Updates status to completed
-```
+All other status is derived from convergence:
+- `converged` - convergence <= 0.01 (actually complete, tested, verified)
+- `not converged` - 0.01 < convergence < 1.0 (work in progress)
+- `pending` - convergence === 1.0 (not started)
 
 ---
 
@@ -907,7 +900,7 @@ np done <id>  # Updates status to completed
 | Wrong priority | `np update <id> -p <1-5>` |
 | Duplicate task | `np del <id> --force` |
 | Stuck on wrong task | Redirect with `np work <correct-id>` |
-| Blocker resolved | `np start <id>` to resume |
+| Blocker resolved | `np update <id> --convergence <value>` to resume |
 | Convergence looks wrong | Check children with `np view <id>` |
 | Task no longer needed | `np update <id> --status cancelled` |
 | Too many subtasks | Delete old ones with `np del <id> --force` |
@@ -942,16 +935,16 @@ np add -n "Logout functionality" --deps mp-auth123
 **You see:**
 ```bash
 np ls
-→ epic: User Authentication (1.0)
-│   ├── Database schema for users (1.0) pending
-│   ├── Registration API endpoint (1.0) pending
-│   ├── Login API endpoint (1.0) pending
-│   ├── JWT token generation (1.0) pending
-│   ├── Password hashing (1.0) pending
-│   ├── Session management (1.0) pending
-│   ├── Frontend login form (1.0) pending
-│   ├── Protected route middleware (1.0) pending
-│   └── Logout functionality (1.0) pending
+→ [EPIC] epic: User Authentication (P1) - 1.00 (pending)
+    ├── [1. mp-def456]: [TASK] Database schema for users (P2) - 1.00 (pending)
+    ├── [2. mp-ghi789]: [TASK] Registration API endpoint (P2) - 1.00 (pending)
+    ├── [3. mp-jkl012]: [TASK] Login API endpoint (P2) - 1.00 (pending)
+    ├── [4. mp-mno345]: [TASK] JWT token generation (P2) - 1.00 (pending)
+    ├── [5. mp-pqr678]: [TASK] Password hashing (P2) - 1.00 (pending)
+    ├── [6. mp-stu901]: [TASK] Session management (P2) - 1.00 (pending)
+    ├── [7. mp-vwx234]: [TASK] Frontend login form (P2) - 1.00 (pending)
+    ├── [8. mp-yza567]: [TASK] Protected route middleware (P2) - 1.00 (pending)
+    └── [9. mp-bcd890]: [TASK] Logout functionality (P2) - 1.00 (pending)
 ```
 
 **You can adjust:**
@@ -984,11 +977,11 @@ np add -n "Email digest integration" --deps
 **You review:**
 ```bash
 np ls
-→ epic: Real-time Notifications (1.0)
-│   ├── Database schema for notifications (1.0)
-│   ├── WebSocket server setup (1.0)
-│   ├── Notification API endpoints (1.0)
-│   └── ... (7 more subtasks)
+→ [EPIC] epic: Real-time Notifications (P1) - 1.00 (pending)
+    ├── [1. mp-def456]: [TASK] Database schema for notifications (P2) - 1.00 (pending)
+    ├── [2. mp-ghi789]: [TASK] WebSocket server setup (P2) - 1.00 (pending)
+    ├── [3. mp-jkl012]: [TASK] Notification API endpoints (P2) - 1.00 (pending)
+    └── ... (5 more subtasks)
 ```
 
 **If you disagree:**
@@ -1042,7 +1035,7 @@ An existing task is too vague. You ask the AI to subdivide it.
 **You see:**
 ```bash
 np ls
-→ mp-abc123: feat: User dashboard (pending)
+→ mp-abc123: [TASK] feat: User dashboard (P3) - 1.00 (pending)
 ```
 
 **You say:**
@@ -1060,12 +1053,12 @@ np add -n "Dashboard layout and styling" --deps mp-abc123
 **Now you see:**
 ```bash
 np ls
-→ feat: User dashboard (1.0)
-│   ├── User profile card (1.0) pending
-│   ├── Activity feed component (1.0) pending
-│   ├── Stats overview panel (1.0) pending
-│   ├── Quick action buttons (1.0) pending
-│   └── Dashboard layout and styling (1.0) pending
+→ [TASK] feat: User dashboard (P3) - 1.00 (pending)
+    ├── [1. mp-def456]: [TASK] User profile card (P2) - 1.00 (pending)
+    ├── [2. mp-ghi789]: [TASK] Activity feed component (P2) - 1.00 (pending)
+    ├── [3. mp-jkl012]: [TASK] Stats overview panel (P2) - 1.00 (pending)
+    ├── [4. mp-mno345]: [TASK] Quick action buttons (P2) - 1.00 (pending)
+    └── [5. mp-pqr678]: [TASK] Dashboard layout and styling (P2) - 1.00 (pending)
 ```
 
 ---
@@ -1089,11 +1082,11 @@ np add -n "feat: Improve error message UX"
 **You check:**
 ```bash
 np ls
-→ mp-abc123: fix: Login button not working on mobile (pending)
-→ mp-def456: feat: Add dark mode toggle (pending)
-→ mp-ghi789: feat: Update about page content (pending)
-→ mp-jkl012: fix: Typo in footer copyright (pending)
-→ mp-mno345: feat: Improve error message UX (pending)
+→ mp-abc123: [BUG] fix: Login button not working on mobile (P3) - 1.00 (pending)
+→ mp-def456: [TASK] feat: Add dark mode toggle (P3) - 1.00 (pending)
+→ mp-ghi789: [TASK] feat: Update about page content (P3) - 1.00 (pending)
+→ mp-jkl012: [BUG] fix: Typo in footer copyright (P3) - 1.00 (pending)
+→ mp-mno345: [TASK] feat: Improve error message UX (P3) - 1.00 (pending)
 ```
 
 ---

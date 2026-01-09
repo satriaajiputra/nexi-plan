@@ -9,8 +9,8 @@ export function insertTask(
   input: TaskInput & { hash_id: string }
 ): Task {
   const query = db.query(`
-    INSERT INTO tasks (hash_id, name, type, priority, status, convergence, description, parent_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO tasks (hash_id, name, type, priority, convergence, description, parent_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     RETURNING id, hash_id, name, type, priority, status, convergence, description, parent_id, created_at, updated_at
   `);
 
@@ -19,7 +19,6 @@ export function insertTask(
     input.name,
     input.type,
     input.priority,
-    "pending",
     1.0,
     input.description ?? null,
     input.parent_id ?? null
@@ -93,7 +92,7 @@ export function getTasksByFilter(
 
   if (filters.excludeStatus && filters.excludeStatus.length > 0) {
     const placeholders = filters.excludeStatus.map(() => "?").join(",");
-    sql += ` AND status NOT IN (${placeholders})`;
+    sql += ` AND (status IS NULL OR status NOT IN (${placeholders}))`;
     params.push(...filters.excludeStatus);
   }
 

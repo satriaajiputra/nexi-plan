@@ -46,10 +46,10 @@ describe("db/client", () => {
       const dbPath = join(testDir, "tasks2.db");
       const db = initDatabase(dbPath);
 
-      // Insert a test task
+      // Insert a test task (status is null by default)
       db.run(`
-        INSERT INTO tasks (hash_id, name, type, priority, status, convergence)
-        VALUES ('test-123', 'Test', 'task', 3, 'pending', 1.0)
+        INSERT INTO tasks (hash_id, name, type, priority, convergence)
+        VALUES ('test-123', 'Test', 'task', 3, 1.0)
       `);
 
       const task = db.query("SELECT * FROM tasks WHERE hash_id = 'test-123'").get() as any;
@@ -57,7 +57,7 @@ describe("db/client", () => {
       expect(task.name).toBe("Test");
       expect(task.type).toBe("task");
       expect(task.priority).toBe(3);
-      expect(task.status).toBe("pending");
+      expect(task.status).toBeNull();
       expect(task.convergence).toBe(1.0);
 
       closeDatabase(db);
