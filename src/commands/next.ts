@@ -1,8 +1,8 @@
 import Database from "bun:sqlite";
 import { getDatabase, closeDatabase, getDbPath } from "../db/client.js";
-import { getTasksByFilter } from "../db/queries.js";
-import { formatTask, info } from "../utils/format.js";
-import { TaskStatus } from "../models/task.js";
+import { getTasksByFilter, getChildTasks } from "../db/queries.js";
+import { formatTask, formatTaskNode, info } from "../utils/format.js";
+import { TaskStatus, type TaskNode } from "../models/task.js";
 
 export async function next(cwd?: string): Promise<void> {
   const dbPath = cwd ? getDbPath(cwd) : undefined;
@@ -33,7 +33,19 @@ export async function next(cwd?: string): Promise<void> {
     })[0];
 
     if (topTask) {
-      console.log(`→ ${formatTask(topTask)}`);
+      const children = getChildTasks(db, topTask.id);
+
+      if (children.length > 0) {
+        // Build a TaskNode with children for display
+        const taskNode: TaskNode = {
+          ...topTask,
+          children: children.map((child) => ({ ...child, children: [], depth: 1 })),
+          depth: 0,
+        };
+        console.log(`→ ${formatTaskNode(taskNode)}`);
+      } else {
+        console.log(`→ ${formatTask(topTask)}`);
+      }
     }
   } finally {
     closeDatabase(db);
