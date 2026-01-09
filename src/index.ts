@@ -129,7 +129,7 @@ async function main() {
 
       const description = getFlag(normalized, "description");
 
-      await update(id, { status, convergence, description });
+      await update(id, { status, convergence, description, force: hasFlag(normalized, "force") });
       break;
     }
 

@@ -10,7 +10,7 @@ import {
 } from "../../src/db/client.ts";
 import { getTaskById } from "../../src/db/queries.ts";
 import { TaskStatus } from "../../src/models/task.ts";
-import { captureConsole, createTestTask } from "../fixtures.ts";
+import { captureConsole, createTestTask, createTestTaskHierarchy } from "../fixtures.ts";
 
 describe("commands/update", () => {
 	const testDir = join(import.meta.dir, "test-update-project");
@@ -140,5 +140,94 @@ describe("commands/update", () => {
 		expect(updated.status).toBe(TaskStatus.BLOCKED);
 		expect(updated.convergence).toBe(0.0);
 		expect(updated.description).toBe("New");
+	});
+
+	describe("convergence cascade to children", () => {
+		test("should show warning when setting convergence to 1.0 with children", async () => {
+			const { epic } = createTestTaskHierarchy(db);
+
+			const console = captureConsole();
+			await updateTask(epic.hash_id, { convergence: 1.0, cwd: testDir });
+
+			expect(console.output).toContain("will set convergence to 1.0");
+			expect(console.output).toContain("2 descendant"); // countChildren only counts direct children
+		});
+
+		test("should not update when has children and not forced", async () => {
+			const { epic, childTask1, childTask2 } = createTestTaskHierarchy(db);
+
+			// Set parent to 0.0 first so we can verify it doesn't change
+			await updateTask(epic.hash_id, { convergence: 0.0, cwd: testDir });
+
+			// Now try to set to 1.0 without force - should not update
+			await updateTask(epic.hash_id, { convergence: 1.0, cwd: testDir });
+
+			// Parent should still have 0.0
+			const updated = getTaskById(db, epic.hash_id)!;
+			expect(updated.convergence).toBe(0.0);
+
+			// Children should not be affected
+			const child1 = getTaskById(db, childTask1.hash_id)!;
+			expect(child1.convergence).toBe(0.5); // Original value
+			const child2 = getTaskById(db, childTask2.hash_id)!;
+			expect(child2.convergence).toBe(1.0); // Original value
+		});
+
+		test("should force update convergence to 1.0 for task and direct children", async () => {
+			const { epic, childTask1, childTask2 } = createTestTaskHierarchy(db);
+
+			await updateTask(epic.hash_id, { convergence: 1.0, force: true, cwd: testDir });
+
+			// Parent should be updated
+			const parent = getTaskById(db, epic.hash_id)!;
+			expect(parent.convergence).toBe(1.0);
+
+			// Direct children should be updated
+			const child1 = getTaskById(db, childTask1.hash_id)!;
+			expect(child1.convergence).toBe(1.0);
+
+			const child2 = getTaskById(db, childTask2.hash_id)!;
+			expect(child2.convergence).toBe(1.0);
+		});
+
+		test("should cascade convergence to all nested descendants", async () => {
+			const { epic, childTask1, childTask2, grandchild } = createTestTaskHierarchy(db);
+
+			await updateTask(epic.hash_id, { convergence: 1.0, force: true, cwd: testDir });
+
+			// All tasks should be updated including grandchild
+			const parent = getTaskById(db, epic.hash_id)!;
+			expect(parent.convergence).toBe(1.0);
+
+			const child1 = getTaskById(db, childTask1.hash_id)!;
+			expect(child1.convergence).toBe(1.0);
+
+			const child2 = getTaskById(db, childTask2.hash_id)!;
+			expect(child2.convergence).toBe(1.0);
+
+			const grandchildTask = getTaskById(db, grandchild.hash_id)!;
+			expect(grandchildTask.convergence).toBe(1.0);
+		});
+
+		test("should show success message with descendant count", async () => {
+			const { epic } = createTestTaskHierarchy(db);
+
+			const console = captureConsole();
+			await updateTask(epic.hash_id, { convergence: 1.0, force: true, cwd: testDir });
+
+			expect(console.output).toContain("Set convergence to 1.0");
+			expect(console.output).toContain("2 descendant"); // countChildren only counts direct children
+		});
+
+		test("should not warn when setting convergence to 1.0 without children", async () => {
+			const task = createTestTask(db, { name: "Leaf Task", convergence: 0.5 });
+
+			const console = captureConsole();
+			await updateTask(task.hash_id, { convergence: 1.0, cwd: testDir });
+
+			expect(console.output).not.toContain("will set convergence to 1.0");
+			const updated = getTaskById(db, task.hash_id)!;
+			expect(updated.convergence).toBe(1.0);
+		});
 	});
 });
