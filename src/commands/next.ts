@@ -34,12 +34,16 @@ export async function next(cwd?: string): Promise<void> {
 
     if (topTask) {
       const children = getChildTasks(db, topTask.id);
+      // Filter to show only pending/not converged children (exclude completed, blocked, cancelled)
+      const pendingChildren = children.filter(
+        (c) => c.convergence > 0.01 && c.status !== TaskStatus.BLOCKED && c.status !== TaskStatus.CANCELLED
+      );
 
-      if (children.length > 0) {
+      if (pendingChildren.length > 0) {
         // Build a TaskNode with children for display
         const taskNode: TaskNode = {
           ...topTask,
-          children: children.map((child) => ({ ...child, children: [], depth: 1 })),
+          children: pendingChildren.map((child) => ({ ...child, children: [], depth: 1 })),
           depth: 0,
         };
         console.log(`→ ${formatTaskNode(taskNode)}`);
