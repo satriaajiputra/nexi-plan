@@ -874,9 +874,9 @@ np block mp-xyz789 -d "Blocked by: mp-abc123 (User dashboard)"
 
 ---
 
-### Scenario 35: "I'm Done But Status Isn't Completed"
+### Scenario 35: Convergence at 0, Status Still In Progress
 
-Task is complete but status wasn't updated.
+When does this happen: AI uses `np update <id> --convergence 0` instead of `np update <id> --convergence 0.005` to complete a task. The value 0 doesn't trigger auto-complete (only <= 0.01 does), so convergence becomes 0 but status stays in_progress.
 
 **You notice:**
 ```bash
@@ -884,11 +884,16 @@ np ls
 → mp-abc123: feat: Export CSV (in_progress) 0.0 *
 ```
 
-**Note the `*` indicator - convergence is within threshold.**
+**What the `*` means:** Task is within threshold (convergence <= 0.01) and ready to complete.
 
-**AI fixes:**
+**AI should have done:**
 ```bash
-np done mp-abc123  # Just updates status to completed
+np update <id> --convergence 0.005  # This triggers auto-complete
+```
+
+**To fix this:**
+```bash
+np done <id>  # Updates status to completed
 ```
 
 ---
