@@ -230,4 +230,154 @@ describe("commands/update", () => {
 			expect(updated.convergence).toBe(1.0);
 		});
 	});
+
+	describe("multi-task updates", () => {
+		test("should update multiple tasks with convergence", async () => {
+			const task1 = createTestTask(db, { name: "Task 1", convergence: 1.0 });
+			const task2 = createTestTask(db, { name: "Task 2", convergence: 1.0 });
+			const task3 = createTestTask(db, { name: "Task 3", convergence: 1.0 });
+
+			const console = captureConsole();
+			await updateTask([task1.hash_id, task2.hash_id, task3.hash_id], {
+				convergence: 0.5,
+				cwd: testDir,
+			});
+
+			expect(console.output).toContain("3 task(s) updated");
+
+			const updated1 = getTaskById(db, task1.hash_id)!;
+			const updated2 = getTaskById(db, task2.hash_id)!;
+			const updated3 = getTaskById(db, task3.hash_id)!;
+
+			expect(updated1.convergence).toBe(0.5);
+			expect(updated2.convergence).toBe(0.5);
+			expect(updated3.convergence).toBe(0.5);
+		});
+
+		test("should update multiple tasks with priority", async () => {
+			const task1 = createTestTask(db, { name: "Task 1", priority: 3 });
+			const task2 = createTestTask(db, { name: "Task 2", priority: 3 });
+
+			await updateTask([task1.hash_id, task2.hash_id], {
+				priority: 1,
+				cwd: testDir,
+			});
+
+			const updated1 = getTaskById(db, task1.hash_id)!;
+			const updated2 = getTaskById(db, task2.hash_id)!;
+
+			expect(updated1.priority).toBe(1);
+			expect(updated2.priority).toBe(1);
+		});
+
+		test("should update both convergence and priority for multiple tasks", async () => {
+			const task1 = createTestTask(db, { name: "Task 1", convergence: 1.0, priority: 3 });
+			const task2 = createTestTask(db, { name: "Task 2", convergence: 1.0, priority: 3 });
+
+			await updateTask([task1.hash_id, task2.hash_id], {
+				convergence: 0.75,
+				priority: 2,
+				cwd: testDir,
+			});
+
+			const updated1 = getTaskById(db, task1.hash_id)!;
+			const updated2 = getTaskById(db, task2.hash_id)!;
+
+			expect(updated1.convergence).toBe(0.75);
+			expect(updated1.priority).toBe(2);
+			expect(updated2.convergence).toBe(0.75);
+			expect(updated2.priority).toBe(2);
+		});
+
+		test("should handle mixed results (some found, some not)", async () => {
+			const task1 = createTestTask(db, { name: "Task 1", convergence: 1.0 });
+			const task2 = createTestTask(db, { name: "Task 2", convergence: 1.0 });
+
+			const console = captureConsole();
+			await updateTask([task1.hash_id, "nonexistent-id", task2.hash_id], {
+				convergence: 0.5,
+				cwd: testDir,
+			});
+
+			expect(console.output).toContain("2 task(s) updated");
+			expect(console.output).toContain("1 task(s) not found");
+
+			const updated1 = getTaskById(db, task1.hash_id)!;
+			expect(updated1.convergence).toBe(0.5);
+		});
+
+		test("should handle single task update (backward compatibility)", async () => {
+			const task = createTestTask(db, { name: "Task", convergence: 1.0 });
+
+			await updateTask(task.hash_id, { convergence: 0.5, cwd: testDir });
+
+			const updated = getTaskById(db, task.hash_id)!;
+			expect(updated.convergence).toBe(0.5);
+		});
+
+		test("should return early for empty task array", async () => {
+			const console = captureConsole();
+			await updateTask([], { convergence: 0.5, cwd: testDir });
+
+			// Should complete without errors and without updating anything
+			expect(console.output).toBe("");
+		});
+
+		test("should snap convergence to zero for multiple tasks", async () => {
+			const task1 = createTestTask(db, { name: "Task 1", convergence: 1.0 });
+			const task2 = createTestTask(db, { name: "Task 2", convergence: 1.0 });
+
+			await updateTask([task1.hash_id, task2.hash_id], {
+				convergence: 0.005,
+				cwd: testDir,
+			});
+
+			const updated1 = getTaskById(db, task1.hash_id)!;
+			const updated2 = getTaskById(db, task2.hash_id)!;
+
+			expect(updated1.convergence).toBe(0);
+			expect(updated2.convergence).toBe(0);
+		});
+	});
+
+	describe("convergence cascade with multi-task", () => {
+		test("should not cascade convergence when updating multiple tasks", async () => {
+			const { epic, childTask1, childTask2 } = createTestTaskHierarchy(db);
+
+			// Update both epic and one child to 1.0 without --force
+			// Should not cascade even though epic has children
+			await updateTask([epic.hash_id, childTask1.hash_id], {
+				convergence: 1.0,
+				force: false,
+				cwd: testDir,
+			});
+
+			const parent = getTaskById(db, epic.hash_id)!;
+			const child1 = getTaskById(db, childTask1.hash_id)!;
+			const child2 = getTaskById(db, childTask2.hash_id)!;
+
+			expect(parent.convergence).toBe(1.0);
+			expect(child1.convergence).toBe(1.0);
+			// child2 should keep its original value
+			expect(child2.convergence).toBe(1.0);
+		});
+
+		test("should still cascade for single task update with --force", async () => {
+			const { epic, childTask1, childTask2 } = createTestTaskHierarchy(db);
+
+			// Set parent to 0.0 first
+			await updateTask(epic.hash_id, { convergence: 0.0, cwd: testDir });
+
+			// Now set to 1.0 with force - should cascade
+			await updateTask(epic.hash_id, { convergence: 1.0, force: true, cwd: testDir });
+
+			const parent = getTaskById(db, epic.hash_id)!;
+			const child1 = getTaskById(db, childTask1.hash_id)!;
+			const child2 = getTaskById(db, childTask2.hash_id)!;
+
+			expect(parent.convergence).toBe(1.0);
+			expect(child1.convergence).toBe(1.0);
+			expect(child2.convergence).toBe(1.0);
+		});
+	});
 });

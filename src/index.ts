@@ -98,16 +98,33 @@ async function main() {
     }
 
     case "update": {
-      const id = getArg(args, 0);
+      const ids = args.length > 0 ? args : undefined;
       // If no ID provided, run self-update
-      if (!id) {
+      if (!ids) {
         await selfUpdate();
         break;
+      }
+
+      // Parse and validate priority flag
+      let priority: TaskPriority | undefined;
+      const priorityFlag = getFlag(normalized, "priority");
+      if (priorityFlag) {
+        const p = parseInt(priorityFlag, 10);
+        if (!validatePriority(p)) {
+          error(`Invalid priority: ${priorityFlag}. Must be between 1 and 5`);
+          return;
+        }
+        priority = p as TaskPriority;
       }
 
       let status: TaskStatus | undefined;
       const statusFlag = getFlag(normalized, "status");
       if (statusFlag) {
+        // Status updates only allowed for single task
+        if (ids.length > 1) {
+          error("Status updates are not supported for multiple tasks. Use a single task ID.");
+          return;
+        }
         if (!validateStatus(statusFlag)) {
           error(`Invalid status: ${statusFlag}`);
           return;
@@ -128,7 +145,13 @@ async function main() {
 
       const description = getFlag(normalized, "description");
 
-      await update(id, { status, convergence, description, force: hasFlag(normalized, "force") });
+      // Description updates only allowed for single task
+      if (description && ids.length > 1) {
+        error("Description updates are not supported for multiple tasks. Use a single task ID.");
+        return;
+      }
+
+      await update(ids, { status, convergence, priority, description, force: hasFlag(normalized, "force") });
       break;
     }
 
@@ -218,12 +241,17 @@ COMMANDS:
     --focus                     Show high-priority unblocked tasks
     --type <type>               Filter by type
 
-  np view <id>                  View full task details
+  np view <id...>                  View full task details
 
-  np update [id] [options]      Update task (or CLI if no id)
-    --status <status>           New status: blocked, cancelled
+  np update <id...> [options]   Update task(s) (or CLI if no id)
+    -p, --priority <1-5>        Priority: 1=highest, 5=lowest
     --convergence <0-1>         Convergence value (0.01=done and tested, 1=not started)
-    -d, --description <text>    Update description (@file for file input)
+    --status <status>           New status: blocked, cancelled (single task only)
+    -d, --description <text>    Update description (@file for file input, single task only)
+    --force                     Force convergence cascade to descendants (single task only)
+
+  Multi-task updates: Can update multiple tasks with --convergence or --priority.
+  Status and description updates only work with a single task ID.
 
   np del <id> [--force]         Delete task (cascades to children)
 
@@ -252,6 +280,7 @@ EXAMPLES:
   np ls --wip                   Show tasks in progress
   np work myproj-abc123         View task details
   np update myproj-abc123 --convergence 0.5
+  np update --priority 1 myproj-abc123 myproj-def456 myproj-ghi789
   np go login                   Find and work on login task
 `);
 }
