@@ -89,12 +89,11 @@ async function main() {
     }
 
     case "view": {
-      const id = getArg(args, 0);
-      if (!id) {
+      if (args.length === 0) {
         error("Missing task ID");
         return;
       }
-      await view(id);
+      await view(args);
       break;
     }
 

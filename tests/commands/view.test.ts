@@ -90,4 +90,26 @@ describe("commands/view", () => {
 
 		expect(console.output).toContain("Test");
 	});
+
+	test("should show multiple tasks", async () => {
+		const task1 = createTestTask(db, { name: "Task One", type: TaskType.TASK });
+		const task2 = createTestTask(db, { name: "Task Two", type: TaskType.EPIC });
+
+		const console = captureConsole();
+		await view([task1.hash_id, task2.hash_id], testDir);
+
+		expect(console.output).toContain("Task One");
+		expect(console.output).toContain("Task Two");
+		expect(console.output).toContain("---"); // separator
+	});
+
+	test("should show multiple tasks with mixed valid and invalid IDs", async () => {
+		const task1 = createTestTask(db, { name: "Valid Task" });
+
+		const console = captureConsole();
+		await view([task1.hash_id, "nonexistent-id"], testDir);
+
+		expect(console.output).toContain("Valid Task");
+		expect(console.output).toContain("not found");
+	});
 });
