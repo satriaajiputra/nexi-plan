@@ -12,6 +12,7 @@ import { next as nextCmd } from "./commands/next.js";
 import { find } from "./commands/find.js";
 import { go } from "./commands/go.js";
 import { selfUpdate } from "./commands/selfUpdate.js";
+import { recalculate } from "./commands/recalculate.js";
 import { validateTaskType, validatePriority, validateStatus, validateConvergence } from "./utils/detect.js";
 import { error, info } from "./utils/format.js";
 import { TaskType, TaskStatus, type TaskPriority } from "./models/task.js";
@@ -211,6 +212,11 @@ async function main() {
       break;
     }
 
+    case "recalculate": {
+      await recalculate(args.length > 0 ? args : undefined);
+      break;
+    }
+
     default:
       info(`Unknown command: ${command}`);
       info("Run 'np help' for usage information");
@@ -256,6 +262,7 @@ COMMANDS:
   np del <id> [--force]         Delete task (cascades to children)
 
   np block <id>                 Mark task as blocked
+  np recalculate [id...]        Recalculate convergence for task(s) or all
   np work <id>                  View task details
   np next                       Show next task to work on
   np find <query>               Search tasks
