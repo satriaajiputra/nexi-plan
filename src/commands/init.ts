@@ -1,4 +1,4 @@
-import { appendFileSync, copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import {
 	clearProjectRootCache,
@@ -7,7 +7,9 @@ import {
 } from "../db/client.js";
 import type { PlanConfig } from "../models/task.js";
 import { savePlanConfig } from "../services/id.js";
-import { AGENTS_TEMPLATE } from "../templates/agents.js";
+import { AGENTS_TEMPLATE } from "../templates/agents.md.js";
+import { CONVERGENCE_VERIFIER_CLAUDE_CODE_AGENT_TEMPLATE } from "../templates/claude-code/agents/convergence-verifier.md.js";
+import { VERIFY_CONVERGENCE_CLAUDE_CODE_COMMAND_TEMPLATE } from "../templates/claude-code/commands/verify-convergence.md.js";
 
 export async function init(
 	prefix: string = "np",
@@ -37,22 +39,43 @@ export async function init(
 	};
 	savePlanConfig(config, planDir);
 
-	// Write AGENTS.md template
-	const agentsPath = join(planDir, "../", "AGENTS.md");
-
 	try {
+		// Write AGENTS.md template
+		const agentsPath = join(cwd, "AGENTS.md");
 		Bun.write(agentsPath, AGENTS_TEMPLATE);
-		// Change CLAUDE.md with AGENTS.md
-		// 1. Check if CLAUDE.md exists and make backup
+
+		// CLAUDE.md setup - backup existing and write new content
 		const claudePath = join(cwd, "CLAUDE.md");
 		if (existsSync(claudePath)) {
-			const backupPath = join(cwd, "CLAUDE.bak.md");
-			copyFileSync(claudePath, backupPath);
+			copyFileSync(claudePath, join(cwd, "CLAUDE.bak.md"));
 		}
-		// 2. Write AGENTS.md content to CLAUDE.md
 		Bun.write(claudePath, AGENTS_TEMPLATE);
+
+		// Claude Code agent setup
+		const agentsDir = join(cwd, ".claude", "agents");
+		mkdirSync(agentsDir, { recursive: true });
+		const convergenceVerifierPath = join(agentsDir, "convergence-verifier.md");
+		if (existsSync(convergenceVerifierPath)) {
+			copyFileSync(convergenceVerifierPath, join(agentsDir, ".convergence-verifier.bak"));
+		}
+		Bun.write(
+			convergenceVerifierPath,
+			CONVERGENCE_VERIFIER_CLAUDE_CODE_AGENT_TEMPLATE,
+		);
+
+		// Claude Code command setup
+		const commandsDir = join(cwd, ".claude", "commands");
+		mkdirSync(commandsDir, { recursive: true });
+		const verifyConvergencePath = join(commandsDir, "verify-convergence.md");
+		if (existsSync(verifyConvergencePath)) {
+			copyFileSync(verifyConvergencePath, join(commandsDir, ".verify-convergence.bak"));
+		}
+		Bun.write(
+			verifyConvergencePath,
+			VERIFY_CONVERGENCE_CLAUDE_CODE_COMMAND_TEMPLATE,
+		);
 	} catch (err) {
-		throw new Error(`Failed to create AGENTS.md: ${(err as Error).message}`);
+		throw new Error(`Failed to create templates: ${(err as Error).message}`);
 	}
 
 	// Clear the cache so subsequent commands can find the newly created .plan

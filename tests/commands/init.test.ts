@@ -86,4 +86,102 @@ describe("commands/init", () => {
 
 		expect(existsSync(planDir)).toBe(true);
 	});
+
+	test("should create CLAUDE.md template", async () => {
+		const claudePath = join(testDir, "CLAUDE.md");
+		expect(existsSync(claudePath)).toBe(false);
+
+		await init("np", testDir);
+
+		expect(existsSync(claudePath)).toBe(true);
+		const content = readFileSync(claudePath, "utf-8");
+		expect(content).toContain("np");
+		expect(content).toContain("Task Tracking");
+	});
+
+	test("should backup existing CLAUDE.md", async () => {
+		const claudePath = join(testDir, "CLAUDE.md");
+		const backupPath = join(testDir, "CLAUDE.bak.md");
+		const originalContent = "# Original Content";
+
+		Bun.write(claudePath, originalContent);
+
+		await init("np", testDir);
+
+		// Backup should exist with original content
+		expect(existsSync(backupPath)).toBe(true);
+		const backupContent = readFileSync(backupPath, "utf-8");
+		expect(backupContent).toBe(originalContent);
+
+		// New CLAUDE.md should have template
+		const claudeContent = readFileSync(claudePath, "utf-8");
+		expect(claudeContent).toContain("Task Tracking");
+	});
+
+	test("should create convergence-verifier.md agent", async () => {
+		const agentPath = join(testDir, ".claude", "agents", "convergence-verifier.md");
+
+		await init("np", testDir);
+
+		expect(existsSync(agentPath)).toBe(true);
+		const content = readFileSync(agentPath, "utf-8");
+		expect(content).toContain("convergence");
+	});
+
+	test("should backup existing convergence-verifier.md", async () => {
+		const agentPath = join(testDir, ".claude", "agents", "convergence-verifier.md");
+		const backupPath = join(testDir, ".claude", "agents", ".convergence-verifier.bak");
+		const originalContent = "# Original Agent";
+
+		mkdirSync(join(testDir, ".claude", "agents"), { recursive: true });
+		Bun.write(agentPath, originalContent);
+
+		await init("np", testDir);
+
+		// Backup should exist
+		expect(existsSync(backupPath)).toBe(true);
+		const backupContent = readFileSync(backupPath, "utf-8");
+		expect(backupContent).toBe(originalContent);
+	});
+
+	test("should create verify-convergence.md command", async () => {
+		const commandPath = join(
+			testDir,
+			".claude",
+			"commands",
+			"verify-convergence.md",
+		);
+
+		await init("np", testDir);
+
+		expect(existsSync(commandPath)).toBe(true);
+		const content = readFileSync(commandPath, "utf-8");
+		expect(content).toContain("verify");
+	});
+
+	test("should backup existing verify-convergence.md", async () => {
+		const commandPath = join(
+			testDir,
+			".claude",
+			"commands",
+			"verify-convergence.md",
+		);
+		const backupPath = join(
+			testDir,
+			".claude",
+			"commands",
+			".verify-convergence.bak",
+		);
+		const originalContent = "# Original Command";
+
+		mkdirSync(join(testDir, ".claude", "commands"), { recursive: true });
+		Bun.write(commandPath, originalContent);
+
+		await init("np", testDir);
+
+		// Backup should exist
+		expect(existsSync(backupPath)).toBe(true);
+		const backupContent = readFileSync(backupPath, "utf-8");
+		expect(backupContent).toBe(originalContent);
+	});
 });
