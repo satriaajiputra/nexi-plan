@@ -1091,6 +1091,197 @@ np ls
 
 ---
 
+## Scenario 41: Verifying Convergence Accuracy
+
+Parent task convergence should be a weighted average of children. Use the `/verify-convergence` command to check if values are accurate.
+
+**You ask AI in Claude Code:**
+```
+/verify-convergence "mp-abc123"
+```
+
+**AI responds:**
+```
+Task: mp-abc123: epic: Payment System
+Current convergence: 0.50
+
+Children:
+├── mp-def456: Database schema (0.01, weight=2.0) - converged
+├── mp-ghi789: API endpoints (0.01, weight=2.0) - converged
+└── mp-jkl012: Stripe integration (0.50, weight=2.0) - not converged
+
+Calculated: (0.01×2 + 0.01×2 + 0.50×2) / (2+2+2) = 1.04/6 = 0.173
+
+⚠️  Current (0.50) differs from calculated (0.173)
+Suggestion: Run `np update mp-abc123 --convergence 0.173`
+```
+
+**You approve:**
+> "Yes, fix it."
+
+**AI does:**
+```bash
+np update mp-abc123 --convergence 0.173
+```
+
+---
+
+## Scenario 42: Quick Convergence Check During Conversation
+
+You're mid-conversation and want to verify a task's progress without looking at the full tree.
+
+**You say:**
+> "What's the real status of the payment epic?"
+
+**AI runs:**
+```
+/verify-convergence "mp-payment-epic"
+```
+
+**AI gets immediate breakdown:**
+```
+epic: Payment System - Current: 0.67
+├── Database (0.01) ✓
+├── API (0.01) ✓
+├── Stripe (0.50) ████░░░░
+└── Webhooks (1.00) pending
+
+Actual weighted average: 0.38
+⚠️  Outdated convergence value!
+```
+
+---
+
+## Scenario 43: Before Marking Task as Complete
+
+You want to verify a parent task is truly complete before setting convergence to 0.01.
+
+**You say:**
+> "Is the payment epic actually done? Check all subtasks."
+
+**AI runs:**
+```
+/verify-convergence "mp-payment-epic"
+```
+
+**AI checks:**
+```
+epic: Payment System
+Current convergence: 0.20
+
+Children:
+├── mp-db (0.01) ✓
+├── mp-api (0.01) ✓
+├── mp-stripe (0.01) ✓
+└── mp-webhooks (0.30) ████░░░░░ (70% remaining)
+
+Calculated: 0.08 (not 0.01!)
+Result: NOT READY - Webhooks still at 0.30
+```
+
+**You see:** One subtask isn't done. AI should finish it before marking epic complete.
+
+---
+
+## Scenario 44: After Multiple Child Updates
+
+You've updated several child tasks and want to verify the parent reflects accurate progress.
+
+**You say:**
+> "I just finished the database and API. What's the payment epic at now?"
+
+**AI runs:**
+```
+/verify-convergence "mp-payment-epic"
+```
+
+**AI reports:**
+```
+epic: Payment System
+Before: 0.90
+Current children:
+├── mp-db (0.01) ✓  (was 1.00)
+├── mp-api (0.01) ✓  (was 1.00)
+├── mp-stripe (0.50)  (unchanged)
+└── mp-webhooks (1.00)  (unchanged)
+
+Calculated: (0.01 + 0.01 + 0.50 + 1.00) / 4 = 0.38
+
+✅  Parent should be updated from 0.90 to 0.38
+```
+
+---
+
+## Scenario 45: Debugging Parent Convergence
+
+A parent shows very low convergence but you know subtasks aren't done.
+
+**You notice:**
+```bash
+np ls
+→ epic: Platform rewrite (P1) - 0.10 (not converged)
+```
+
+**You suspect:** "That seems too low. Let me verify."
+
+**You ask AI:**
+```
+/verify-convergence "mp-platform-rewrite"
+```
+
+**AI discovers:**
+```
+epic: Platform rewrite
+Current: 0.10
+
+Children:
+├── mp-abc123: Auth (0.01) ✓
+├── mp-def456: API (0.01) ✓
+└── mp-ghi789: Frontend (0.80) ████████░ (80% remaining)
+
+Calculated: (0.01 + 0.01 + 0.80) / 3 = 0.27
+
+⚠️  Current (0.10) is incorrect!
+Suggestion: Update to 0.27
+```
+
+**Root cause:** Someone manually set parent to 0.10 without updating children.
+
+---
+
+## Scenario 46: Verifying Child Task Independence
+
+A task without children should not show parent-weighted convergence.
+
+**You ask:**
+```
+/verify-convergence "mp-simple-task"
+```
+
+**AI confirms:**
+```
+Task: mp-simple-task: fix: Typo in error message
+Type: bug (weight 3.0)
+Children: none
+
+Convergence: 0.01
+✅ Accurate - leaf task, no children to calculate
+```
+
+---
+
+## When to Use /verify-convergence
+
+| Situation | Command |
+|-----------|---------|
+| Before marking epic complete | `/verify-convergence <epic-id>` |
+| After updating multiple children | `/verify-convergence <parent-id>` |
+| Parent convergence seems wrong | `/verify-convergence <parent-id>` |
+| Debugging progress display | `/verify-convergence <task-id>` |
+| Quick status check | `/verify-convergence <task-id>` |
+
+---
+
 ## When to Delegate Task Creation to AI
 
 | Your Situation | What to Say |

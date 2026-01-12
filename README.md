@@ -267,7 +267,48 @@ cp .plan/tasks.db .plan/tasks.db.backup
 
 ## Claude Code Integration
 
-Run `np init` in your project and an `AGENTS.md` file will be created with instructions for AI assistants on how to use the task tracker.
+Run `np init` in your project and the following files will be created:
+
+- `AGENTS.md` - Instructions for AI assistants on how to use the task tracker
+- `.claude/agents/convergence-verifier.md` - A Claude Code agent for verifying task convergence
+- `.claude/commands/verify-convergence.md` - A slash command for verifying convergence
+
+### Claude Code Slash Command
+
+When using Claude Code, you can verify task convergence by running:
+
+```
+/verify-convergence "<task_id>"
+```
+
+This command analyzes the task and its children to provide an accurate convergence value. For example:
+
+```
+/verify-convergence "mp-abc123"
+```
+
+The agent will:
+- Fetch the task details
+- Check all child tasks and their convergence values
+- Calculate the weighted average (if applicable)
+- Report whether the current convergence is accurate
+- Suggest corrections if needed
+
+**Example output:**
+```
+Task: mp-abc123: feat: Implement payment system
+Current convergence: 0.50
+
+Child tasks:
+- mp-def456: Database schema (0.01 - converged)
+- mp-ghi789: API endpoints (0.01 - converged)
+- mp-jkl012: Stripe integration (0.50 - not converged)
+
+Calculated parent convergence: (0.01×2 + 0.50×2) / (2+2) = 1.02/4 = 0.255
+
+⚠️  Current convergence (0.50) differs from calculated (0.255)
+Suggestion: Update convergence to 0.255
+```
 
 ## Common Workflows Guide
 
